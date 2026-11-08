@@ -1,0 +1,31 @@
+<ui:FluentWindow x:Class="RszTool.App.Views.DuplicateContextWindow"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        WindowBackdropType="Mica"
+        ExtendsContentIntoTitleBar="True"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="重复多次 / 自动设置 ContextID" Width="530" Height="360" ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
+    <Grid>
+    <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <ui:TitleBar Grid.Row="0" Title="快速复制 / 自动分配 ContextID" Padding="10,4"/>
+    <StackPanel Grid.Row="1" Margin="20">
+        <TextBlock Text="新增副本数量"/>
+        <TextBox x:Name="CountInput" Text="1" Margin="0,4,0,14"/>
+        <CheckBox x:Name="AutoInput" Content="自动设置 ContextID（所有副本连续递增）" IsChecked="True" Margin="0,0,0,10"/>
+        <TextBlock x:Name="ContextSummary" TextWrapping="Wrap" Margin="0,0,0,8"/>
+        <UniformGrid Columns="3">
+            <StackPanel Margin="0,0,8,0"><TextBlock Text="Group"/><TextBox x:Name="GroupInput" Text="0"/></StackPanel>
+            <StackPanel Margin="0,0,8,0"><TextBlock Text="起始 Index"/><TextBox x:Name="IndexInput" Text="0"/></StackPanel>
+            <StackPanel><TextBlock Text="Index 步长"/><TextBox x:Name="StepInput" Text="1"/></StackPanel>
+        </UniformGrid>
+        <TextBlock Text="保留源对象；不勾选自动设置时，副本保留原 ID。取消不会创建副本。" TextWrapping="Wrap" Margin="0,12,0,8"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <ui:Button Content="确定" Width="80" Margin="4" Click="OK_Click" IsDefault="True"/>
+            <ui:Button Content="取消" Width="80" Margin="4" IsCancel="True"/>
+        </StackPanel>
+    </StackPanel>
+</Grid>
+</ui:FluentWindow>

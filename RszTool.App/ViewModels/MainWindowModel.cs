@@ -21,16 +21,46 @@ namespace RszTool.App.ViewModels
         public ObservableCollection<HeaderedItemViewModel> Items { get; } = new();
         public HeaderedItemViewModel? SelectedTabItem { get; set; }
         public FileExplorerViewModel FileExplorerViewModel { get; } = new();
+        public UvarWorkspace UvarWorkspace => App.Instance.UvarWorkspace;
+        public bool IsUvarMode { get; set; }
+        public string UvarToggleText => IsUvarMode ? "返回文件编辑" : "UVAR / Flag 管理";
 
         
         private BaseRszFileViewModel? CurrentFile =>
-            SelectedTabItem is FileTabItemViewModel fileTabItemViewModel ?
+            IsUvarMode ? UvarWorkspace.Current : SelectedTabItem is FileTabItemViewModel fileTabItemViewModel ?
             fileTabItemViewModel.FileViewModel : null;
 
        
 
         public CustomInterTabClient InterTabClient { get; } = new();
-        public static SaveData SaveData => App.Instance.SaveData;
+        public SaveData SaveData => App.Instance.SaveData;
+        public static SaveData StaticSaveData => App.Instance.SaveData;
+
+        public double AppFontSize
+        {
+            get => SaveData.AppFontSize;
+            set
+            {
+                if (Math.Abs(SaveData.AppFontSize - value) > 0.01)
+                {
+                    SaveData.AppFontSize = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AppFontSize)));
+                    App.Instance.SaveSettings();
+                }
+            }
+        }
+
+        public record FontSizeOption(double Size, string Label);
+        public static FontSizeOption[] FontSizeOptions { get; } = new[]
+        {
+            new FontSizeOption(11.0, "11 (极小)"),
+            new FontSizeOption(12.0, "12 (小)"),
+            new FontSizeOption(13.0, "13 (标准)"),
+            new FontSizeOption(14.0, "14 (适中)"),
+            new FontSizeOption(15.0, "15 (较大)"),
+            new FontSizeOption(16.0, "16 (大)"),
+            new FontSizeOption(18.0, "18 (特大)"),
+        };
 
         public RelayCommand OpenCommand => new(OnOpen);
         public RelayCommand SaveCommand => new(OnSave);
@@ -42,6 +72,22 @@ namespace RszTool.App.ViewModels
         public RelayCommand ClearRecentFilesHistory => new(OnClearRecentFilesHistory);
         public RelayCommand OpenRecentFile => new(OnOpenRecentFile);
         public RelayCommand OpenAbout => new(OnOpenAbout);
+        public RelayCommand OpenSettings => new(_ => AppUtils.TryActionSimple(ShowSettings));
+        public RelayCommand ToggleUvar => new(_ => AppUtils.TryActionSimple(OnToggleUvar));
+
+        private void ShowSettings()
+        {
+            new UvarSettingsWindow { Owner = Application.Current.MainWindow }.ShowDialog();
+        }
+
+        private void OnToggleUvar()
+        {
+            if (IsUvarMode) { IsUvarMode = false; return; }
+            if (string.IsNullOrWhiteSpace(SaveData.UvarFilePath)) ShowSettings();
+            if (string.IsNullOrWhiteSpace(SaveData.UvarFilePath)) return;
+            UvarWorkspace.RequireDocument();
+            IsUvarMode = true;
+        }
 
         public ItemActionCallback ClosingTabItemHandler => ClosingTabItemHandlerImpl;
 
@@ -66,6 +112,17 @@ namespace RszTool.App.ViewModels
         /// <param name="path"></param>
         public void OpenFile(string path)
         {
+            path = Path.GetFullPath(path);
+            var fileType = RszUtils.GetFileType(path);
+            if (fileType == FileType.uvar)
+            {
+                if (UvarWorkspace.Configure(path))
+                {
+                    IsUvarMode = true;
+                    SaveData.AddRecentFile(path);
+                }
+                return;
+            }
             // check file opened
             foreach (var item in Items)
             {
@@ -74,6 +131,7 @@ namespace RszTool.App.ViewModels
                     if (fileTab.FileViewModel.FilePath == path)
                     {
                         SelectedTabItem = item;
+                        IsUvarMode = false;
                         return;
                     }
                 }
@@ -89,7 +147,7 @@ namespace RszTool.App.ViewModels
             BaseRszFileViewModel? fileViewModel = null;
             ContentControl? content = null;
             RszFileOption option = new(SaveData.GameName);
-            switch (RszUtils.GetFileType(path))
+            switch (fileType)
             {
                 case FileType.user:
                     fileViewModel = new UserFileViewModel(new(option, new(path)));
@@ -133,6 +191,7 @@ namespace RszTool.App.ViewModels
                 HeaderedItemViewModel header = new FileTabItemViewModel(fileViewModel, content);
                 Items.Add(header);
                 SelectedTabItem = header;
+                IsUvarMode = false;
 
                 SaveData.AddRecentFile(path);
             }
@@ -172,6 +231,7 @@ namespace RszTool.App.ViewModels
             ("User file", "*.user.*"),
             ("Scene file", "*.scn.*"),
             ("Prefab file", "*.pfb.*"),
+            ("UVAR flag file", "*.uvar.3"),
         };
 
         private static readonly string OpenFileFilter =
@@ -192,7 +252,10 @@ namespace RszTool.App.ViewModels
 
         private void OnSave(object arg)
         {
-            AppUtils.TryAction(() => CurrentFile?.Save());
+            AppUtils.TryAction(() =>
+            {
+                if (CurrentFile != null && !CurrentFile.Save()) throw new IOException("保存文件失败。");
+            });
         }
 
         private void OnSaveAs(object arg)
@@ -202,7 +265,9 @@ namespace RszTool.App.ViewModels
             var dialog = new SaveFileDialog
             {
                 FileName = currentFile.FileName,
-                Filter = OpenFileFilter
+                Filter = IsUvarMode ? "UVAR v3|*.uvar.3" : OpenFileFilter,
+                DefaultExt = IsUvarMode ? ".uvar.3" : "",
+                AddExtension = true,
             };
             if (dialog.ShowDialog() == true)
             {
@@ -212,7 +277,12 @@ namespace RszTool.App.ViewModels
                 {
                     AppUtils.TryAction(() =>
                     {
-                        if(currentFile.SaveAs(path))
+                        if (IsUvarMode)
+                        {
+                            UvarWorkspace.SaveAs(path);
+                            SaveData.AddRecentFile(path);
+                        }
+                        else if(currentFile.SaveAs(path))
                         {
                             SaveData.AddRecentFile(path);
                         }
@@ -223,7 +293,11 @@ namespace RszTool.App.ViewModels
 
         private void OnReopen(object arg)
         {
-            AppUtils.TryAction(() => CurrentFile?.Reopen());
+            AppUtils.TryAction(() =>
+            {
+                if (IsUvarMode) UvarWorkspace.Reopen();
+                else CurrentFile?.Reopen();
+            });
         }
 
         private static bool OnTabClose(FileTabItemViewModel fileTab)
@@ -244,6 +318,7 @@ namespace RszTool.App.ViewModels
 
         private void OnClose(object arg)
         {
+            if (IsUvarMode) { IsUvarMode = false; return; }
             if (SelectedTabItem is FileTabItemViewModel fileTab && OnTabClose(fileTab))
             {
                 Items.Remove(fileTab);
@@ -289,7 +364,9 @@ namespace RszTool.App.ViewModels
                     if (!OnTabClose(fileTab)) return false;
                 }
             }
-            return true;
+            bool canClose = false;
+            AppUtils.TryActionSimple(() => canClose = UvarWorkspace.ConfirmPendingChanges());
+            return canClose;
         }
 
         private void OnOpenAbout(object arg)

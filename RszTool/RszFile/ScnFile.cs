@@ -306,6 +306,22 @@ namespace RszTool
 
         public override RSZFile? GetRSZ() => RSZ;
 
+        public void MarkStructChanged()
+        {
+            StructChanged = true;
+        }
+
+        public void InitializeEmpty()
+        {
+            RSZ = new RSZFile(Option, new FileHandler(new MemoryStream()));
+            RSZ.ClearInstances();
+            RSZ.ClearObjects();
+            FolderDatas = new();
+            GameObjectDatas = new();
+            StructChanged = true;
+            ResourceChanged = false;
+        }
+
         protected override bool DoRead()
         {
             GameObjectInfoList.Clear();
@@ -358,7 +374,7 @@ namespace RszTool
             FileHandler handler = FileHandler;
             handler.Clear();
             var header = Header;
-            handler.Seek(header.Size);
+            header.Write(handler);
             GameObjectInfoList.Write(handler);
 
             if (FolderInfoList.Count > 0)
@@ -387,7 +403,7 @@ namespace RszTool
 
             handler.Align(16);
             header.dataOffset = handler.Tell();
-            WriteRsz(RSZ!, header.dataOffset);
+            if (!WriteRsz(RSZ!, header.dataOffset)) return false;
 
             header.magic = Magic;
             header.infoCount = GameObjectInfoList.Count;
@@ -576,8 +592,12 @@ namespace RszTool
                 throw new InvalidOperationException("RSZ is null");
             }
 
+            RSZ.NormalizeNullReferences();
+
             // 重新生成实例表
-            List<RszInstance> rszInstances = new() { RszInstance.NULL };
+            // RebuildInstanceList adds the single NULL instance itself.
+            // Seeding it here creates a duplicate NULL entry in the RSZ list.
+            List<RszInstance> rszInstances = new();
             if (FolderDatas != null)
             {
                 foreach (var folder in FolderDatas)
@@ -898,64 +918,88 @@ namespace RszTool
         /// Fix GameObjectRef after clone
         /// </summary>
         /// <param name="rootGameObject"></param>
+        private static IEnumerable<GameObjectData> IterGameObjectWithSelf(GameObjectData rootGameObject)
+        {
+            yield return rootGameObject;
+            foreach (var item in rootGameObject.Children)
+            {
+                foreach (var child in IterGameObjectWithSelf(item))
+                {
+                    yield return child;
+                }
+            }
+        }
+
         private void FixGameObjectRef(GameObjectData rootGameObject)
         {
+            FixGameObjectRef([rootGameObject]);
+        }
+
+        private void FixGameObjectRef(IEnumerable<GameObjectData> rootGameObjects)
+        {
+            var roots = rootGameObjects.ToList();
             Dictionary<Guid, List<GameObjectRefData>>? gameObjectRefDatas = null;
             // record GameObjectRef
-            foreach (var item in IterGameObjectInstances(rootGameObject))
+            foreach (var rootGameObject in roots)
             {
-                if (item.RszClass.name == "via.GameObject") continue;
-                foreach (var instance in item.Flatten())
+                foreach (var item in IterGameObjectInstances(rootGameObject))
                 {
-                    if (instance.RSZUserData != null) continue;
-                    var fields = instance.Fields;
-                    for (int i = 0; i < fields.Length; i++)
+                    if (item.RszClass.name == "via.GameObject") continue;
+                    foreach (var instance in item.Flatten())
                     {
-                        RszField field = fields[i];
-                        if (field.type == RszFieldType.GameObjectRef)
+                        if (instance.RSZUserData != null) continue;
+                        var fields = instance.Fields;
+                        for (int i = 0; i < fields.Length; i++)
                         {
-                            gameObjectRefDatas ??= new();
-                            if (field.array)
+                            RszField field = fields[i];
+                            if (field.type == RszFieldType.GameObjectRef)
                             {
-                                var items = (List<object>)instance.Values[i];
-                                for (int j = 0; j < items.Count; j++)
+                                gameObjectRefDatas ??= new();
+                                if (field.array)
                                 {
-                                    Guid guid = (Guid)items[j];
+                                    var items = (List<object>)instance.Values[i];
+                                    for (int j = 0; j < items.Count; j++)
+                                    {
+                                        Guid guid = (Guid)items[j];
+                                        if (guid != Guid.Empty)
+                                        {
+                                            if (!gameObjectRefDatas.TryGetValue(guid, out var refDatas))
+                                            {
+                                                gameObjectRefDatas[guid] = refDatas = new();
+                                            }
+                                            refDatas.Add(new(items, j));
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    Guid guid = (Guid)instance.Values[i];
                                     if (guid != Guid.Empty)
                                     {
                                         if (!gameObjectRefDatas.TryGetValue(guid, out var refDatas))
                                         {
                                             gameObjectRefDatas[guid] = refDatas = new();
                                         }
-                                        refDatas.Add(new(items, j));
+                                        refDatas.Add(new(instance.Values, i));
                                     }
-                                }
-                            }
-                            else
-                            {
-                                Guid guid = (Guid)instance.Values[i];
-                                if (guid != Guid.Empty)
-                                {
-                                    if (!gameObjectRefDatas.TryGetValue(guid, out var refDatas))
-                                    {
-                                        gameObjectRefDatas[guid] = refDatas = new();
-                                    }
-                                    refDatas.Add(new(instance.Values, i));
                                 }
                             }
                         }
                     }
                 }
             }
-            foreach (var item in IterGameObjects(rootGameObject, true))
+            foreach (var rootGameObject in roots)
             {
-                // fix GameObjectRef
-                if (gameObjectRefDatas != null && item.OriginalGuid != Guid.Empty &&
-                    gameObjectRefDatas.TryGetValue(item.OriginalGuid, out var refDatas))
+                foreach (var item in IterGameObjectWithSelf(rootGameObject))
                 {
-                    foreach (var refData in refDatas)
+                    // fix GameObjectRef
+                    if (gameObjectRefDatas != null && item.OriginalGuid != Guid.Empty &&
+                        gameObjectRefDatas.TryGetValue(item.OriginalGuid, out var refDatas))
                     {
-                        refData.Values[refData.ValueIndex] = item.Guid;
+                        foreach (var refData in refDatas)
+                        {
+                            refData.Values[refData.ValueIndex] = item.Guid;
+                        }
                     }
                 }
             }
@@ -973,6 +1017,7 @@ namespace RszTool
         public GameObjectData ImportGameObject(GameObjectData gameObject, FolderData? folder = null,
                                      GameObjectData? parent = null, bool isDuplicate = false)
         {
+            var sourceGameObject = gameObject;
             GameObjectData newGameObject = (GameObjectData)gameObject.Clone();
             FixGameObjectRef(newGameObject);
 
@@ -1001,7 +1046,7 @@ namespace RszTool
 
             if (isDuplicate)
             {
-                int index = collection.IndexOf(gameObject);
+                int index = collection.IndexOf(sourceGameObject);
                 index = index == -1 ? collection.Count : index + 1;
                 collection.Insert(index, newGameObject);
             }
@@ -1020,14 +1065,121 @@ namespace RszTool
         /// 批量添加建议直接GameObjectDatas添加，最后再RebuildInfoTable
         /// </summary>
         /// <param name="gameObject"></param>
-        public void ImportGameObjects(
+        public List<GameObjectData> ImportGameObjects(
             IEnumerable<GameObjectData> gameObjects,
             FolderData? folder = null, GameObjectData? parent = null)
         {
-            foreach (var gameObject in gameObjects)
+            RszInstance.CleanCloneCache();
+            var newGameObjects = gameObjects.Select(item => (GameObjectData)item.Clone()).ToList();
+            FixGameObjectRef(newGameObjects);
+            ObservableCollection<GameObjectData> collection;
+            if (folder != null)
             {
-                ImportGameObject(gameObject, folder, parent);
+                collection = folder.GameObjects;
+                foreach (var gameObject in newGameObjects)
+                {
+                    gameObject.Parent = null;
+                    gameObject.Folder = folder;
+                }
             }
+            else if (parent != null)
+            {
+                collection = parent.Children;
+                foreach (var gameObject in newGameObjects)
+                {
+                    gameObject.Folder = null;
+                    gameObject.Parent = parent;
+                }
+            }
+            else
+            {
+                GameObjectDatas ??= [];
+                collection = GameObjectDatas;
+                foreach (var gameObject in newGameObjects)
+                {
+                    gameObject.Folder = null;
+                    gameObject.Parent = null;
+                }
+            }
+
+            foreach (var gameObject in newGameObjects)
+            {
+                RSZ!.FixInstanceListIndex(IterGameObjectInstances(gameObject));
+                collection.Add(gameObject);
+            }
+            StructChanged = true;
+            RszInstance.CleanCloneCache();
+            return newGameObjects;
+        }
+
+        /// <summary>
+        /// 获取重复对象的插入集合
+        /// </summary>
+        private ObservableCollection<GameObjectData> GetDuplicateGameObjectCollection(GameObjectData sourceGameObject)
+        {
+            if (sourceGameObject.Folder != null)
+            {
+                return sourceGameObject.Folder.GameObjects;
+            }
+            if (sourceGameObject.Parent != null)
+            {
+                return sourceGameObject.Parent.Children;
+            }
+
+            GameObjectDatas ??= [];
+            return GameObjectDatas;
+        }
+
+        private void InsertDuplicatedGameObject(GameObjectData sourceGameObject, GameObjectData newGameObject)
+        {
+            var collection = GetDuplicateGameObjectCollection(sourceGameObject);
+            int index = collection.IndexOf(sourceGameObject);
+            index = index == -1 ? collection.Count : index + 1;
+            collection.Insert(index, newGameObject);
+        }
+
+        /// <summary>
+        /// Batch duplicate game objects and fix references/indexes in groups.
+        /// </summary>
+        public Dictionary<GameObjectData, List<GameObjectData>> DuplicateGameObjects(
+            IEnumerable<GameObjectData> gameObjects,
+            int count)
+        {
+            var sourceGameObjects = gameObjects.ToList();
+            var duplicatedBySource = sourceGameObjects.ToDictionary(
+                source => source,
+                source => new List<GameObjectData>());
+            if (sourceGameObjects.Count == 0 || count <= 0)
+            {
+                return duplicatedBySource;
+            }
+
+            List<(GameObjectData Source, GameObjectData Clone)> duplicatedGameObjects = new();
+            for (int i = 0; i < count; i++)
+            {
+                RszInstance.CleanCloneCache();
+                List<GameObjectData> duplicateGroup = new(sourceGameObjects.Count);
+                foreach (var sourceGameObject in sourceGameObjects)
+                {
+                    var newGameObject = (GameObjectData)sourceGameObject.Clone();
+                    newGameObject.Folder = sourceGameObject.Folder;
+                    newGameObject.Parent = sourceGameObject.Parent;
+                    duplicateGroup.Add(newGameObject);
+                    duplicatedBySource[sourceGameObject].Add(newGameObject);
+                    duplicatedGameObjects.Add((sourceGameObject, newGameObject));
+                }
+                FixGameObjectRef(duplicateGroup);
+            }
+
+            RSZ!.FixInstanceListIndex(duplicatedGameObjects.SelectMany(item => IterGameObjectInstances(item.Clone)));
+            foreach (var (sourceGameObject, newGameObject) in duplicatedGameObjects)
+            {
+                InsertDuplicatedGameObject(sourceGameObject, newGameObject);
+            }
+
+            StructChanged = true;
+            RszInstance.CleanCloneCache();
+            return duplicatedBySource;
         }
 
         /// <summary>

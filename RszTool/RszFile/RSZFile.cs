@@ -42,6 +42,12 @@ namespace RszTool
 
         public RSZFile(RszFileOption option, FileHandler fileHandler) : base(option, fileHandler)
         {
+            Header.Data.version = option.Version switch
+            {
+                GameVersion.re7 => 3u,
+                GameVersion.re2 or GameVersion.dmc5 => 8u,
+                _ => 16u,
+            };
         }
 
         public const uint Magic = 0x5a5352;
@@ -217,6 +223,8 @@ namespace RszTool
         public void ClearInstances()
         {
             InstanceList.Clear();
+            RszInstance.NULL.Index = 0;
+            RszInstance.NULL.ObjectTableIndex = -1;
             InstanceList.Add(RszInstance.NULL);
         }
 
@@ -224,6 +232,75 @@ namespace RszTool
         {
             ObjectTableList.Clear();
             ObjectList.Clear();
+        }
+
+        /// <summary>
+        /// Normalize typeId=0 references to the single RSZ NULL sentinel.
+        /// Some SCN files contain standalone NULL records for empty UserData
+        /// references; keeping those records creates duplicate NULLs when
+        /// the instance table is rebuilt.
+        /// </summary>
+        public void NormalizeNullReferences()
+        {
+            RszInstance.NULL.Index = 0;
+            RszInstance.NULL.ObjectTableIndex = -1;
+
+            HashSet<RszInstance> visited = new();
+            foreach (var instance in InstanceList)
+            {
+                NormalizeNullReferences(instance, visited);
+            }
+        }
+
+        private static void NormalizeNullReferences(
+            RszInstance instance,
+            HashSet<RszInstance> visited)
+        {
+            if (!visited.Add(instance) || instance.RSZUserData != null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < instance.Fields.Length; i++)
+            {
+                var field = instance.Fields[i];
+                if (!field.IsReference)
+                {
+                    continue;
+                }
+
+                if (field.array)
+                {
+                    var items = (List<object>)instance.Values[i];
+                    for (int j = 0; j < items.Count; j++)
+                    {
+                        if (items[j] is not RszInstance child)
+                        {
+                            continue;
+                        }
+
+                        if (child.RszClass.typeId == 0)
+                        {
+                            items[j] = RszInstance.NULL;
+                        }
+                        else
+                        {
+                            NormalizeNullReferences(child, visited);
+                        }
+                    }
+                }
+                else if (instance.Values[i] is RszInstance child)
+                {
+                    if (child.RszClass.typeId == 0)
+                    {
+                        instance.Values[i] = RszInstance.NULL;
+                    }
+                    else
+                    {
+                        NormalizeNullReferences(child, visited);
+                    }
+                }
+            }
         }
 
         public string InstanceStringify(RszInstance instance)
@@ -309,6 +386,7 @@ namespace RszTool
             {
                 foreach (var item in instance.Flatten(new(){ Predicate = x => x.Index != -1 }))
                 {
+                    if (ReferenceEquals(item, RszInstance.NULL)) continue;
                     item.Index = -1;
                 }
             }
@@ -317,6 +395,7 @@ namespace RszTool
                 if (instance.Index != -1) continue;
                 foreach (var item in instance.Flatten())
                 {
+                    if (ReferenceEquals(item, RszInstance.NULL)) continue;
                     if (item.Index < 0 || item.Index >= list.Count || list[item.Index] != item)
                     {
                         item.Index = list.Count;

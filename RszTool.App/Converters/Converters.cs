@@ -69,7 +69,7 @@ namespace RszTool.App.Converters
             }
             yield return new TreeItemViewModel("Components",
                 GameObejctComponentViewModel.MakeList(gameObject));
-            yield return new TreeItemViewModel("Children", gameObject.Children);
+            yield return new ScnGameObjectsHeader("Children", gameObject.Children, parent: gameObject);
         }
 
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -95,7 +95,7 @@ namespace RszTool.App.Converters
                 yield return folder.Instance;
             }
             yield return new TreeItemViewModel("Children", folder.Children);
-            yield return new TreeItemViewModel("GameObjects", folder.GameObjects);
+            yield return new ScnGameObjectsHeader("GameObjects", folder.GameObjects, folder);
             yield return new TreeItemViewModel("Prefabs", folder.Prefabs);
         }
 
@@ -123,7 +123,7 @@ namespace RszTool.App.Converters
             }
             yield return new TreeItemViewModel("Components",
                 GameObejctComponentViewModel.MakeList(gameObject));
-            yield return new TreeItemViewModel("Children", gameObject.Children);
+            yield return new GameObjectsHeader("Children", gameObject.Children);
         }
 
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)

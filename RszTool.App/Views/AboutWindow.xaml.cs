@@ -18,7 +18,7 @@ namespace RszTool.App.Views
     /// <summary>
     /// AboutWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class AboutWindow : Window
+    public partial class AboutWindow : Wpf.Ui.Controls.FluentWindow
     {
         public AboutWindow()
         {

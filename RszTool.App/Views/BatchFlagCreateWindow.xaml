@@ -1,0 +1,40 @@
+<ui:FluentWindow x:Class="RszTool.App.Views.BatchFlagCreateWindow"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        WindowBackdropType="Mica"
+        ExtendsContentIntoTitleBar="True"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="批量创建 flag · 数字递增" Width="660" Height="560" MinWidth="550" MinHeight="450" WindowStartupLocation="CenterOwner">
+    <Grid>
+    <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <ui:TitleBar Grid.Row="0" Title="批量生成 UVAR 顺序 Flag 标志" Padding="10,4"/>
+    <DockPanel Grid.Row="1" Margin="16">
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock x:Name="GroupText" TextWrapping="Wrap" Margin="0,0,0,10"/>
+            <TextBlock Text="参考已有名称（保留前缀、后缀和编号位数）"/>
+            <DockPanel Margin="0,4,0,10">
+                <ui:Button Content="接已有最大编号" DockPanel.Dock="Right" Padding="10,4" Click="Continue_Click"/>
+                <TextBox x:Name="ReferenceInput" Margin="0,0,8,0"/>
+            </DockPanel>
+            <UniformGrid Columns="3">
+                <StackPanel Margin="0,0,10,0"><TextBlock Text="起始编号"/><TextBox x:Name="StartInput" Text="0"/></StackPanel>
+                <StackPanel Margin="0,0,10,0"><TextBlock Text="创建数量"/><TextBox x:Name="CountInput" Text="10"/></StackPanel>
+                <StackPanel><TextBlock Text="递增步长"/><TextBox x:Name="StepInput" Text="1"/></StackPanel>
+            </UniformGrid>
+            <CheckBox x:Name="DefaultInput" Content="新 flag 的默认值为 True（默认不勾选，即 False）" Margin="0,12,0,10"/>
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+            <TextBlock x:Name="StatusText" TextWrapping="Wrap" Margin="0,0,0,8"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <ui:Button Content="预览名称" Click="Preview_Click" Width="100" Margin="4"/>
+                <ui:Button Content="创建" Click="Create_Click" Width="100" Margin="4" IsDefault="True"/>
+                <ui:Button Content="取消" Width="80" Margin="4" IsCancel="True"/>
+            </StackPanel>
+        </StackPanel>
+        <ListBox x:Name="NamesList" ScrollViewer.CanContentScroll="True" VirtualizingPanel.IsVirtualizing="True"/>
+    </DockPanel>
+</Grid>
+</ui:FluentWindow>

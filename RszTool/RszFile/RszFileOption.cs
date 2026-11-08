@@ -7,7 +7,7 @@ namespace RszTool
         public RszParser RszParser { get; set; }
         public EnumParser EnumParser { get; set; }
 
-        public RszFileOption(GameName gameName)
+        public RszFileOption(GameName gameName, bool loadSchema = true)
         {
             GameName = gameName;
             Version = gameName switch
@@ -25,8 +25,8 @@ namespace RszTool
                 GameName.sf6 => GameVersion.sf6,
                 _ => GameVersion.unknown,
             };
-            RszParser = RszParser.GetInstance($"rsz{gameName}.json");
-            EnumParser = EnumParser.GetInstance($"Data\\Enums\\{gameName}_enum.json");
+            RszParser = loadSchema ? RszParser.GetInstance($"rsz{gameName}.json") : null!;
+            EnumParser = loadSchema ? EnumParser.GetInstance($"Data\\Enums\\{gameName}_enum.json") : null!;
         }
     }
 }

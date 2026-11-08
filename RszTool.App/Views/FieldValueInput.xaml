@@ -7,6 +7,7 @@
              xmlns:converters="clr-namespace:RszTool.App.Converters"
              xmlns:viewmodels="clr-namespace:RszTool.App.ViewModels"
              xmlns:rsztool="clr-namespace:RszTool;assembly=RszTool"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              mc:Ignorable="d"
              d:DesignHeight="200" d:DesignWidth="800"
              Binding.SourceUpdated="OnBindingSourceUpdated">
@@ -16,20 +17,36 @@
         <converters:BytesConverter x:Key="BytesConverter"/>
         <converters:RszFieldEnumConverter x:Key="RszFieldEnumConverter"/>
 
+        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource DefaultTextBoxStyle}">
+            <Setter Property="MinHeight" Value="24"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="4,0"/>
+        </Style>
+        <Style TargetType="{x:Type ComboBox}" BasedOn="{StaticResource DefaultComboBoxStyle}">
+            <Setter Property="MinHeight" Value="24"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="4,0"/>
+        </Style>
+
         <DataTemplate x:Key="InputText">
             <TextBox Text="{Binding Value, NotifyOnSourceUpdated=True, RelativeSource={RelativeSource AncestorType=UserControl}}" />
         </DataTemplate>
         <DataTemplate x:Key="InputEnum">
-            <Grid>
+            <Grid MinHeight="24">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="90"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="2*"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Text="{Binding Value, NotifyOnSourceUpdated=True, RelativeSource={RelativeSource AncestorType=UserControl}}" Grid.Column="0" />
-                <ComboBox DisplayMemberPath="Name" SelectedValuePath="Value"
+                <TextBox Text="{Binding Value, NotifyOnSourceUpdated=True, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                         VerticalAlignment="Center" Margin="0,0,6,0" />
+                <ComboBox Grid.Column="1"
+                          DisplayMemberPath="DisplayName"
+                          SelectedValuePath="Value"
+                          IsTextSearchEnabled="True"
+                          TextSearch.TextPath="Name"
                           ItemsSource="{Binding EnumItems, RelativeSource={RelativeSource AncestorType=UserControl}}"
                           SelectedValue="{Binding Value, Converter={StaticResource RszFieldEnumConverter}, NotifyOnSourceUpdated=True, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                          Grid.Column="1" />
+                          VerticalAlignment="Center" />
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="InputColor">
@@ -37,8 +54,20 @@
         </DataTemplate>
         <DataTemplate x:Key="InputGuid">
             <DockPanel>
-                <Button Content="New" Click="OnGuidNew" DockPanel.Dock="Right" />
-                <TextBox Text="{Binding Value, NotifyOnSourceUpdated=True, Converter={StaticResource GuidConverter}, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <ui:Button Icon="{ui:SymbolIcon Tag16}" Content="UVAR库" Click="OnGuidChooseUvar" DockPanel.Dock="Right" Margin="4,0,0,0" Padding="8,2" MinHeight="24" Appearance="Secondary" ToolTip="从全局 UVAR 库选取 GUID">
+                    <ui:Button.Style>
+                        <Style TargetType="{x:Type ui:Button}" BasedOn="{StaticResource DefaultUiButtonStyle}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ValueType, RelativeSource={RelativeSource AncestorType={x:Type local:FieldValueInput}}}" Value="{x:Static rsztool:RszFieldType.Guid}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ui:Button.Style>
+                </ui:Button>
+                <ui:Button Icon="{ui:SymbolIcon Add16}" Content="新建" Click="OnGuidNew" DockPanel.Dock="Right" Margin="4,0,0,0" Padding="8,2" MinHeight="24" Appearance="Secondary" ToolTip="生成随机 GUID" />
+                <TextBox Text="{Binding Value, NotifyOnSourceUpdated=True, Converter={StaticResource GuidConverter}, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalAlignment="Center" />
             </DockPanel>
         </DataTemplate>
         <DataTemplate x:Key="InputBool">
@@ -48,43 +77,88 @@
             <TextBox Text="{Binding Value, NotifyOnSourceUpdated=True, Converter={StaticResource BytesConverter}, RelativeSource={RelativeSource AncestorType=UserControl}}" />
         </DataTemplate>
         <DataTemplate x:Key="InputVec2">
-            <Grid>
+            <Grid MinHeight="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Text="{Binding [0], NotifyOnSourceUpdated=True}" Grid.Column="0" />
-                <TextBox Text="{Binding [1], NotifyOnSourceUpdated=True}" Grid.Column="1" />
+                <Border Grid.Column="0" Margin="0,0,4,0" Background="{DynamicResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="2,0">
+                    <DockPanel>
+                        <TextBlock Text="X" FontWeight="Bold" Foreground="#E81123" Margin="4,0,4,0" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBox Text="{Binding [0], NotifyOnSourceUpdated=True}" BorderThickness="0" Background="Transparent" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
+                <Border Grid.Column="1" Margin="4,0,0,0" Background="{DynamicResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="2,0">
+                    <DockPanel>
+                        <TextBlock Text="Y" FontWeight="Bold" Foreground="#107C41" Margin="4,0,4,0" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBox Text="{Binding [1], NotifyOnSourceUpdated=True}" BorderThickness="0" Background="Transparent" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="InputVec3">
-            <Grid>
+            <Grid MinHeight="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Text="{Binding [0], NotifyOnSourceUpdated=True}" Grid.Column="0" />
-                <TextBox Text="{Binding [1], NotifyOnSourceUpdated=True}" Grid.Column="1" />
-                <TextBox Text="{Binding [2], NotifyOnSourceUpdated=True}" Grid.Column="2" />
+                <Border Grid.Column="0" Margin="0,0,3,0" Background="{DynamicResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="2,0">
+                    <DockPanel>
+                        <TextBlock Text="X" FontWeight="Bold" Foreground="#E81123" Margin="4,0,4,0" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBox Text="{Binding [0], NotifyOnSourceUpdated=True}" BorderThickness="0" Background="Transparent" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
+                <Border Grid.Column="1" Margin="3,0,3,0" Background="{DynamicResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="2,0">
+                    <DockPanel>
+                        <TextBlock Text="Y" FontWeight="Bold" Foreground="#107C41" Margin="4,0,4,0" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBox Text="{Binding [1], NotifyOnSourceUpdated=True}" BorderThickness="0" Background="Transparent" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
+                <Border Grid.Column="2" Margin="3,0,0,0" Background="{DynamicResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="2,0">
+                    <DockPanel>
+                        <TextBlock Text="Z" FontWeight="Bold" Foreground="#0078D4" Margin="4,0,4,0" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBox Text="{Binding [2], NotifyOnSourceUpdated=True}" BorderThickness="0" Background="Transparent" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="InputVec4">
-            <Grid>
+            <Grid MinHeight="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Text="{Binding [0], NotifyOnSourceUpdated=True}" Grid.Column="0" />
-                <TextBox Text="{Binding [1], NotifyOnSourceUpdated=True}" Grid.Column="1" />
-                <TextBox Text="{Binding [2], NotifyOnSourceUpdated=True}" Grid.Column="2" />
-                <TextBox Text="{Binding [3], NotifyOnSourceUpdated=True}" Grid.Column="3" />
+                <Border Grid.Column="0" Margin="0,0,2,0" Background="{DynamicResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="2,0">
+                    <DockPanel>
+                        <TextBlock Text="X" FontWeight="Bold" Foreground="#E81123" Margin="3,0,3,0" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBox Text="{Binding [0], NotifyOnSourceUpdated=True}" BorderThickness="0" Background="Transparent" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
+                <Border Grid.Column="1" Margin="2,0,2,0" Background="{DynamicResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="2,0">
+                    <DockPanel>
+                        <TextBlock Text="Y" FontWeight="Bold" Foreground="#107C41" Margin="3,0,3,0" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBox Text="{Binding [1], NotifyOnSourceUpdated=True}" BorderThickness="0" Background="Transparent" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
+                <Border Grid.Column="2" Margin="2,0,2,0" Background="{DynamicResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="2,0">
+                    <DockPanel>
+                        <TextBlock Text="Z" FontWeight="Bold" Foreground="#0078D4" Margin="3,0,3,0" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBox Text="{Binding [2], NotifyOnSourceUpdated=True}" BorderThickness="0" Background="Transparent" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
+                <Border Grid.Column="3" Margin="2,0,0,0" Background="{DynamicResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="2,0">
+                    <DockPanel>
+                        <TextBlock Text="W" FontWeight="Bold" Foreground="#8764B8" Margin="3,0,3,0" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBox Text="{Binding [3], NotifyOnSourceUpdated=True}" BorderThickness="0" Background="Transparent" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="InputMat4">
-            <Grid>
+            <Grid MinHeight="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
@@ -116,7 +190,7 @@
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="InputOBB">
-            <Grid>
+            <Grid MinHeight="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -136,7 +210,7 @@
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="InputSphere">
-            <Grid>
+            <Grid MinHeight="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -156,7 +230,7 @@
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="InputAABB">
-            <Grid>
+            <Grid MinHeight="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -176,7 +250,7 @@
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="InputCapsule">
-            <Grid>
+            <Grid MinHeight="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -201,7 +275,7 @@
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="InputArea">
-            <Grid>
+            <Grid MinHeight="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>

@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -7,7 +7,7 @@ namespace RszTool.App.Views
     /// <summary>
     /// InputDialog.xaml 的交互逻辑
     /// </summary>
-    public partial class InputDialog : Window
+    public partial class InputDialog : Wpf.Ui.Controls.FluentWindow
     {
         public string Message { get; set; } = "";
         public string InputText { get; set; } = "";

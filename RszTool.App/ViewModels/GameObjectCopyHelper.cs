@@ -7,33 +7,81 @@ namespace RszTool.App.ViewModels
     {
         private static PfbFile.GameObjectData? CopiedPfbGameObject { get; set; }
         private static ScnFile.GameObjectData? CopiedScnGameObject { get; set; }
+        private static List<PfbFile.GameObjectData>? CopiedPfbGameObjects { get; set; }
+        private static List<ScnFile.GameObjectData>? CopiedScnGameObjects { get; set; }
 
         public static void CopyGameObject(PfbFile.GameObjectData gameObject)
         {
             CopiedPfbGameObject = gameObject;
             CopiedScnGameObject = null;
+            CopiedPfbGameObjects = null;
+            CopiedScnGameObjects = null;
         }
 
         public static void CopyGameObject(ScnFile.GameObjectData gameObject)
         {
             CopiedScnGameObject = gameObject;
             CopiedPfbGameObject = null;
+            CopiedPfbGameObjects = null;
+            CopiedScnGameObjects = null;
+        }
+
+        public static void CopyGameObjects(IEnumerable<ScnFile.GameObjectData> gameObjects)
+        {
+            CopiedScnGameObjects = gameObjects.ToList();
+            CopiedPfbGameObjects = null;
+            CopiedScnGameObject = CopiedScnGameObjects.Count == 1 ? CopiedScnGameObjects[0] : null;
+            CopiedPfbGameObject = null;
+        }
+
+        public static void CopyGameObjects(IEnumerable<PfbFile.GameObjectData> gameObjects)
+        {
+            CopiedPfbGameObjects = gameObjects.ToList();
+            CopiedScnGameObjects = null;
+            CopiedPfbGameObject = CopiedPfbGameObjects.Count == 1 ? CopiedPfbGameObjects[0] : null;
+            CopiedScnGameObject = null;
         }
 
         public static PfbFile.GameObjectData? GetCopiedPfbGameObject()
         {
             if (CopiedPfbGameObject != null) return CopiedPfbGameObject;
+            if (CopiedPfbGameObjects?.Count > 0) return CopiedPfbGameObjects[0];
             if (CopiedScnGameObject != null)
                 return PfbFile.GameObjectData.FromScnGameObject(CopiedScnGameObject);
+            if (CopiedScnGameObjects?.Count > 0)
+                return PfbFile.GameObjectData.FromScnGameObject(CopiedScnGameObjects[0]);
             return null;
         }
 
         public static ScnFile.GameObjectData? GetCopiedScnGameObject()
         {
             if (CopiedScnGameObject != null) return CopiedScnGameObject;
+            if (CopiedScnGameObjects?.Count > 0) return CopiedScnGameObjects[0];
             if (CopiedPfbGameObject != null)
                 return ScnFile.GameObjectData.FromPfbGameObject(CopiedPfbGameObject);
+            if (CopiedPfbGameObjects?.Count > 0)
+                return ScnFile.GameObjectData.FromPfbGameObject(CopiedPfbGameObjects[0]);
             return null;
+        }
+
+        public static IEnumerable<ScnFile.GameObjectData> GetCopiedScnGameObjects()
+        {
+            if (CopiedScnGameObjects?.Count > 0) return CopiedScnGameObjects;
+            if (CopiedScnGameObject != null) return [CopiedScnGameObject];
+            if (CopiedPfbGameObjects?.Count > 0)
+                return CopiedPfbGameObjects.Select(ScnFile.GameObjectData.FromPfbGameObject).ToList();
+            if (CopiedPfbGameObject != null) return [ScnFile.GameObjectData.FromPfbGameObject(CopiedPfbGameObject)];
+            return [];
+        }
+
+        public static IEnumerable<PfbFile.GameObjectData> GetCopiedPfbGameObjects()
+        {
+            if (CopiedPfbGameObjects?.Count > 0) return CopiedPfbGameObjects;
+            if (CopiedPfbGameObject != null) return [CopiedPfbGameObject];
+            if (CopiedScnGameObjects?.Count > 0)
+                return CopiedScnGameObjects.Select(PfbFile.GameObjectData.FromScnGameObject).ToList();
+            if (CopiedScnGameObject != null) return [PfbFile.GameObjectData.FromScnGameObject(CopiedScnGameObject)];
+            return [];
         }
 
         /// <summary>
@@ -46,6 +94,22 @@ namespace RszTool.App.ViewModels
             if (fileOption.GameName == GameName.re4)
             {
                 var contextIDs = IterGameObjectContextID(gameObjectData).ToArray();
+                if (contextIDs.Length > 0)
+                {
+                    UpdateContextIDWindow dialog = new()
+                    {
+                        TreeViewItems = contextIDs
+                    };
+                    dialog.ShowDialog();
+                }
+            }
+        }
+
+        public static void UpdateContextIDs(RszFileOption fileOption, IEnumerable<IGameObjectData> gameObjectDatas)
+        {
+            if (fileOption.GameName == GameName.re4)
+            {
+                var contextIDs = gameObjectDatas.SelectMany(IterGameObjectContextID).ToArray();
                 if (contextIDs.Length > 0)
                 {
                     UpdateContextIDWindow dialog = new()
@@ -99,51 +163,18 @@ namespace RszTool.App.ViewModels
         /// <returns></returns>
         public static IEnumerable<GameObjectContextID> IterGameObjectContextID(IGameObjectData gameObject)
         {
-            foreach (var component in gameObject.Components)
-            {
-                if (component.RSZUserData != null) continue;
-                var fields = component.Fields;
-                for (int i = 0; i < component.Values.Length; i++)
-                {
-                    if (fields[i].IsReference && component.Values[i] is RszInstance instanceField)
-                    {
-                        if (instanceField.RszClass.name == "chainsaw.ContextID")
-                        {
-                            yield return new GameObjectContextID($"{gameObject}/{component}.{fields[i].name}", instanceField);
-                        }
-                    }
-                }
-            }
-            foreach (var child in gameObject.GetChildren())
-            {
-                foreach (var item in IterGameObjectContextID(child))
-                {
-                    yield return item;
-                }
-            }
+            foreach (var (path, instance) in Re4IdEditor.Walk(Re4IdEditor.GameObjectRoots(gameObject, true)))
+                if (instance.RszClass.name == "chainsaw.ContextID")
+                    yield return new GameObjectContextID(path, instance);
         }
 
         public static IEnumerable<GameObjectContextID> IterInstanceContextID(RszInstance instance)
         {
-            List<RszInstanceFieldRecord> paths = new();
-            foreach (var item in instance.Flatten(new(){ Paths = paths }))
-            {
-                if (item.RSZUserData != null) continue;
-                var fields = item.Fields;
-                string? parentPath = null;
-                for (int i = 0; i < item.Values.Length; i++)
-                {
-                    if (fields[i].IsReference && item.Values[i] is RszInstance instanceField)
-                    {
-                        if (instanceField.RszClass.name == "chainsaw.ContextID")
-                        {
-                            parentPath ??= string.Join("/", paths.Select(x => x.ToString()));
-                            yield return new GameObjectContextID($"{parentPath}/{item}.{fields[i].name}", instanceField);
-                        }
-                    }
-                }
-            }
+            foreach (var (path, current) in Re4IdEditor.Walk([(instance.Name, instance)]))
+                if (current.RszClass.name == "chainsaw.ContextID")
+                    yield return new GameObjectContextID(path, current);
         }
+
     }
 
 

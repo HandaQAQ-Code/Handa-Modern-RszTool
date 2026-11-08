@@ -8,6 +8,8 @@ namespace RszTool.App.ViewModels
     {
         RszField Field { get; }
         string Name { get; }
+        string EnumTypeName { get; }
+        string OwnerClassName { get; }
         object Value { get; set; }
     }
 
@@ -21,6 +23,8 @@ namespace RszTool.App.ViewModels
         public int Index { get; } = index;
         public RszField Field => instance.RszClass.fields[Index];
         public virtual string Name => Field.name;
+        public string EnumTypeName => Re4IdEditor.FieldType(instance, Field);
+        public string OwnerClassName => instance.RszClass.name;
 
         public virtual object Value
         {
@@ -97,6 +101,13 @@ namespace RszTool.App.ViewModels
     {
         public override string Name => $"{Field.name} : {Field.DisplayType}";
         public List<object> Values => (List<object>)instance.Values[Index];
+        public bool CanGenerateMercenariesSpawnPoints =>
+            Field.IsReference &&
+            string.Equals(Field.name, "_SpawnPoints", StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(
+                RszInstance.GetElementType(Field.original_type),
+                "chainsaw.CharacterSpawnPointMercenaries",
+                StringComparison.OrdinalIgnoreCase);
 
         private IEnumerable<BaseRszFieldArrayItemViewModel> GetItems()
         {
@@ -134,6 +145,8 @@ namespace RszTool.App.ViewModels
         public int Index { get; } = index;
 
         public RszField Field { get; } = array.Field;
+        public string EnumTypeName => Array.EnumTypeName;
+        public string OwnerClassName => Array.OwnerClassName;
         public virtual string Name => $"{Index}:";
         public List<object> Values => Array.Values;
 

@@ -121,6 +121,7 @@ namespace RszTool
                 ".pfb" => FileType.pfb,
                 ".scn" => FileType.scn,
                 ".mdf2" => FileType.mdf2,
+                ".uvar" => FileType.uvar,
                 _ => FileType.unknown,
             };
         }

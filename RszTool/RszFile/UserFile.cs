@@ -90,7 +90,7 @@ namespace RszTool
             handler.StringTableFlush();
 
             header.dataOffset = handler.Tell();
-            WriteRsz(RSZ!, header.dataOffset);
+            if (!WriteRsz(RSZ!, header.dataOffset)) return false;
 
             header.magic = Magic;
             header.resourceCount = ResourceInfoList.Count;

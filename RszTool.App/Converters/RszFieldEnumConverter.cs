@@ -42,6 +42,7 @@ namespace RszTool.App.Converters
 
         public object? ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
+            if (value is not ulong) return Binding.DoNothing;
             ulong enumValue = (ulong)value;
             if (TargetType == typeof(int))
             {

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 
 namespace RszTool
@@ -11,21 +13,32 @@ namespace RszTool
 
         public static EnumParser GetInstance(string jsonPath)
         {
-            if (!instanceDict.TryGetValue(jsonPath, out var rszParser))
+            string resolvedPath = ResolveFilePath(jsonPath);
+            string fullKey = Path.GetFullPath(resolvedPath);
+            if (!instanceDict.TryGetValue(fullKey, out var rszParser))
             {
-                rszParser = new EnumParser(jsonPath);
-                instanceDict[jsonPath] = rszParser;
+                rszParser = new EnumParser(resolvedPath);
+                instanceDict[fullKey] = rszParser;
             }
             return rszParser;
+        }
+
+        private static string ResolveFilePath(string path)
+        {
+            if (File.Exists(path)) return path;
+            string baseCandidate = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
+            if (File.Exists(baseCandidate)) return baseCandidate;
+            return path;
         }
 
         public EnumDict EnumDict { get; }
 
         public EnumParser(string jsonPath)
         {
-            if (File.Exists(jsonPath))
+            string resolvedPath = ResolveFilePath(jsonPath);
+            if (File.Exists(resolvedPath))
             {
-                using FileStream fileStream = File.OpenRead(jsonPath);
+                using FileStream fileStream = File.OpenRead(resolvedPath);
                 EnumDict = new(JsonSerializer.Deserialize<Dictionary<string, EnumData>>(fileStream) ?? []);
             }
             else
@@ -33,18 +46,68 @@ namespace RszTool
                 EnumDict = new([]);
             }
 
-            // read in culture specific json
-            string cultureJsonPath = Path.ChangeExtension(jsonPath, $".{Thread.CurrentThread.CurrentCulture}.json");
-            if (File.Exists(cultureJsonPath))
+            // Candidates to search for localized enum json
+            var candidateExtensions = new List<string>();
+            var cultures = new[]
             {
-                using FileStream fileStream = File.OpenRead(cultureJsonPath);
-                EnumDict cultureDict = new(JsonSerializer.Deserialize<Dictionary<string, EnumData>>(fileStream) ?? []);
-                if (cultureDict.Dict.Count > 0)
+                CultureInfo.CurrentUICulture.Name,
+                CultureInfo.CurrentCulture.Name,
+                Thread.CurrentThread.CurrentCulture.Name
+            };
+
+            foreach (var c in cultures)
+            {
+                if (!string.IsNullOrEmpty(c))
                 {
-                    foreach (var item in cultureDict.Dict)
+                    candidateExtensions.Add($".{c}.json");
+                    int dash = c.IndexOf('-');
+                    if (dash > 0)
                     {
-                        EnumDict.Dict[item.Key] = item.Value;
+                        candidateExtensions.Add($".{c.Substring(0, dash)}.json");
                     }
+                }
+            }
+
+            // Chinese fallbacks & standard default
+            candidateExtensions.Add(".zh-CN.json");
+            candidateExtensions.Add(".zh-Hans.json");
+            candidateExtensions.Add(".zh.json");
+
+            string? foundCulturePath = null;
+            foreach (var ext in candidateExtensions.Distinct())
+            {
+                string candidate = Path.ChangeExtension(resolvedPath, ext);
+                if (File.Exists(candidate))
+                {
+                    foundCulturePath = candidate;
+                    break;
+                }
+                string baseCandidate = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.ChangeExtension(jsonPath, ext));
+                if (File.Exists(baseCandidate))
+                {
+                    foundCulturePath = baseCandidate;
+                    break;
+                }
+            }
+
+            if (foundCulturePath != null && File.Exists(foundCulturePath))
+            {
+                try
+                {
+                    using FileStream fileStream = File.OpenRead(foundCulturePath);
+                    var cultureDict = JsonSerializer.Deserialize<Dictionary<string, EnumData>>(fileStream);
+                    if (cultureDict != null && cultureDict.Count > 0)
+                    {
+                        foreach (var item in cultureDict)
+                        {
+                            EnumDict.Dict[item.Key] = item.Value;
+                        }
+                    }
+                    Debug.WriteLine($"[EnumParser] Successfully loaded localized enums from: {foundCulturePath}");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[EnumParser] Failed to load localized enums from {foundCulturePath}: {ex}");
                 }
             }
         }
@@ -56,5 +119,8 @@ namespace RszTool
     }
 
     public record EnumData(EnumItem[] Items, bool Flags);
-    public record EnumItem(string Name, ulong Value);
+    public record EnumItem(string Name, ulong Value)
+    {
+        public string DisplayName => $"{Name} ({Value})";
+    }
 }

@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:common="clr-namespace:RszTool.App.Common"
              xmlns:converters="clr-namespace:RszTool.App.Converters"
              xmlns:local="clr-namespace:RszTool.App.Views"
@@ -10,7 +11,8 @@
              xmlns:res="clr-namespace:RszTool.App.Resources"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=viewmodels:FileExplorerViewModel}"
-             d:DesignHeight="450" d:DesignWidth="200" d:Background="White">
+             d:DesignHeight="450" d:DesignWidth="220"
+             Background="Transparent">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -20,53 +22,68 @@
 
             <common:BindingProxy x:Key="ParentData" Data="{Binding}" />
 
+            <!-- Root Directory Template with modern icon -->
             <HierarchicalDataTemplate DataType="{x:Type viewmodels:RootDirectoryItem}" ItemsSource="{Binding Children}">
-                <Grid>
+                <Grid Margin="0,2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center">
-                        <TextBlock.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="{res:Text Remove}" Command="{Binding Data.RemoveRootDirectory, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
-                            </ContextMenu>
-                        </TextBlock.ContextMenu>
-                    </TextBlock>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="FolderOpen20" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center">
+                            <TextBlock.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="{res:Text Remove}" Command="{Binding Data.RemoveRootDirectory, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
+                                </ContextMenu>
+                            </TextBlock.ContextMenu>
+                        </TextBlock>
+                    </StackPanel>
                     <Button Grid.Column="1" Style="{StaticResource ImageButton}"
                             ToolTip="{res:Text RefreshFileExplorer}"
-                            Command="{Binding Data.RefreshRootDirectory, Source={StaticResource ParentData}}" CommandParameter="{Binding}">
-                        <Image Source="{StaticResource refreshDrawingImage}" Width="16" />
+                            Command="{Binding Data.RefreshRootDirectory, Source={StaticResource ParentData}}" CommandParameter="{Binding}"
+                            Padding="3" Margin="4,0,0,0">
+                        <ui:SymbolIcon Symbol="ArrowCounterclockwise16" />
                     </Button>
                 </Grid>
             </HierarchicalDataTemplate>
 
+            <!-- Sub Directory Template with modern icon -->
             <HierarchicalDataTemplate DataType="{x:Type viewmodels:DirectoryItem}" ItemsSource="{Binding Children}">
-                <TextBlock Text="{Binding Name}">
-                    <TextBlock.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="{res:Text OpenInExplorer}" Command="{Binding Data.OpenInExplorer, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
-                        </ContextMenu>
-                    </TextBlock.ContextMenu>
-                </TextBlock>
-            </HierarchicalDataTemplate>
-
-            <DataTemplate DataType="{x:Type viewmodels:FileItem}">
-                <ContentControl MouseDoubleClick="FileItem_MouseDoubleClick">
-                    <TextBlock Text="{Binding Name}">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,1">
+                    <ui:SymbolIcon Symbol="Folder20" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center">
                         <TextBlock.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="{res:Text OpenInExplorer}" Command="{Binding Data.OpenInExplorer, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
                             </ContextMenu>
                         </TextBlock.ContextMenu>
                     </TextBlock>
+                </StackPanel>
+            </HierarchicalDataTemplate>
+
+            <!-- File Item Template with modern icon -->
+            <DataTemplate DataType="{x:Type viewmodels:FileItem}">
+                <ContentControl MouseDoubleClick="FileItem_MouseDoubleClick">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,1">
+                        <ui:SymbolIcon Symbol="Document20" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center">
+                            <TextBlock.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="{res:Text OpenInExplorer}" Command="{Binding Data.OpenInExplorer, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
+                                </ContextMenu>
+                            </TextBlock.ContextMenu>
+                        </TextBlock>
+                    </StackPanel>
                 </ContentControl>
             </DataTemplate>
 
             <converters:TypeIsAssignableFromConverter x:Key="TypeIsAssignableFromConverter" />
 
             <Style TargetType="TreeViewItem">
+                <Setter Property="Foreground" Value="{DynamicResource TextForeground}"/>
                 <Setter Property="IsExpanded" Value="{Binding IsExpanded}"/>
+                <Setter Property="Padding" Value="2,1"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="TreeViewItem">
@@ -76,23 +93,28 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto" MinHeight="28"/>
                                     <RowDefinition/>
                                 </Grid.RowDefinitions>
                                 <ToggleButton x:Name="Expander" Style="{StaticResource ExpandCollapseToggleStyle}"
                                             Grid.Row="0"
                                             Grid.Column="0"
+                                            VerticalAlignment="Center"
                                             IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
                                             ClickMode="Press"/>
 
                                 <Border x:Name="Bd"
                                         Grid.Row="0"
                                         Grid.Column="1"
+                                        MinHeight="28"
                                         Background="{TemplateBinding Background}"
                                         BorderBrush="{TemplateBinding BorderBrush}"
                                         BorderThickness="{TemplateBinding BorderThickness}"
-                                        Padding="0,2,0,2">
-                                    <ContentPresenter x:Name="PART_Header" ContentSource="Header" HorizontalAlignment="Stretch" />
+                                        CornerRadius="4"
+                                        Padding="4,0"
+                                        VerticalAlignment="Center"
+                                        TextElement.Foreground="{TemplateBinding Foreground}">
+                                    <ContentPresenter x:Name="PART_Header" ContentSource="Header" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
                                 </Border>
                                 <ItemsPresenter x:Name="ItemsHost" Grid.Row="1" Grid.Column="1"/>
                             </Grid>
@@ -109,34 +131,8 @@
                                              Value="True">
                                     <Setter TargetName="Expander" Property="Visibility" Value="Visible" />
                                 </DataTrigger>
-                                <MultiTrigger>
-                                    <MultiTrigger.Conditions>
-                                        <Condition Property="HasHeader" Value="false"/>
-                                        <Condition Property="Width" Value="Auto"/>
-                                    </MultiTrigger.Conditions>
-                                    <Setter TargetName="PART_Header" Property="MinWidth" Value="75"/>
-                                </MultiTrigger>
-                                <MultiTrigger>
-                                    <MultiTrigger.Conditions>
-                                        <Condition Property="HasHeader" Value="false"/>
-                                        <Condition Property="Height" Value="Auto"/>
-                                    </MultiTrigger.Conditions>
-                                    <Setter TargetName="PART_Header" Property="MinHeight" Value="19"/>
-                                </MultiTrigger>
                                 <Trigger Property="IsSelected" Value="true">
-                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-                                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
-                                </Trigger>
-                                <MultiTrigger>
-                                    <MultiTrigger.Conditions>
-                                        <Condition Property="IsSelected" Value="true"/>
-                                        <Condition Property="IsSelectionActive" Value="false"/>
-                                    </MultiTrigger.Conditions>
-                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/>
-                                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
-                                </MultiTrigger>
-                                <Trigger Property="IsEnabled" Value="false">
-                                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -145,13 +141,29 @@
             </Style>
         </ResourceDictionary>
     </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <!-- Sidebar Header -->
+        <Border Grid.Row="0" Padding="6,6,6,8"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:SymbolIcon Symbol="Folder20" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <TextBlock Text="文件资源树" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
         <TreeView x:Name="TreeView" Grid.Row="1" ItemsSource="{Binding Folders}"
-                  SelectedItemChanged="TreeView_SelectedItemChanged" />
+                  SelectedItemChanged="TreeView_SelectedItemChanged"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  Margin="0,4,0,0"/>
     </Grid>
 </UserControl>

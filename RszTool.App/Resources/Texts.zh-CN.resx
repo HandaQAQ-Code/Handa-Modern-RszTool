@@ -144,8 +144,38 @@
   <data name="Copy" xml:space="preserve">
     <value>复制</value>
   </data>
+  <data name="CopyGameObjects" xml:space="preserve">
+    <value>复制游戏对象</value>
+  </data>
   <data name="Remove" xml:space="preserve">
     <value>移除</value>
+  </data>
+  <data name="RemoveGameObjects" xml:space="preserve">
+    <value>移除游戏对象</value>
+  </data>
+  <data name="RemoveGameObjectsConfirm" xml:space="preserve">
+    <value>移除 {0} 个游戏对象？</value>
+  </data>
+  <data name="BatchTransformV0" xml:space="preserve">
+    <value>批量修改 Transform v0</value>
+  </data>
+  <data name="PasteTransformV0FromClipboard" xml:space="preserve">
+    <value>从剪贴板粘贴 Transform v0</value>
+  </data>
+  <data name="TransformClipboardInvalid" xml:space="preserve">
+    <value>剪贴板格式必须为 (1,2,3,4)。</value>
+  </data>
+  <data name="TransformClipboardReadFailed" xml:space="preserve">
+    <value>读取剪贴板文本失败：{0}</value>
+  </data>
+  <data name="ShuffleGameObjects" xml:space="preserve">
+    <value>随机打乱游戏对象顺序</value>
+  </data>
+  <data name="ShuffleGameObjectsSameParentOnly" xml:space="preserve">
+    <value>只能同时打乱同一父级下的游戏对象。</value>
+  </data>
+  <data name="NoTransformEdited" xml:space="preserve">
+    <value>没有修改任何 via.Transform v0。</value>
   </data>
   <data name="Duplicate" xml:space="preserve">
     <value>重复</value>
@@ -300,5 +330,17 @@
   </data>
   <data name="InputContextCheck" xml:space="preserve">
     <value>对象有ContextID吗？</value>
+  </data>
+  <data name="RandomizeMontageID" xml:space="preserve">
+    <value>随机化 MontageID</value>
+  </data>
+  <data name="InputMontageIDs" xml:space="preserve">
+    <value>输入 MontageID 列表（支持逗号、空格或换行分隔）</value>
+  </data>
+  <data name="RandomizeMontageIDTip" xml:space="preserve">
+    <value>对于 spawnParam 这类刷怪器预制体，可为重复出的对象随机分配 MontageID。</value>
+  </data>
+  <data name="MontageIDListInvalid" xml:space="preserve">
+    <value>MontageID 列表为空或格式无效。</value>
   </data>
 </root>

@@ -1,13 +1,19 @@
 using System.Windows;
 using RszTool.App.Resources;
+using RszTool.App.Views;
 
 namespace RszTool.App.Common
 {
     public static class MessageBoxUtils
     {
+        public static MessageBoxResult Show(string message, string? title = null, MessageBoxButton button = MessageBoxButton.OK, MessageBoxImage icon = MessageBoxImage.None)
+        {
+            return ModernMessageBoxWindow.Show(message, title ?? Texts.Message, button, icon);
+        }
+
         public static MessageBoxResult ShowOk(string message, MessageBoxImage icon)
         {
-            return MessageBox.Show(Application.Current.MainWindow, message, Texts.Message, MessageBoxButton.OK, icon);
+            return ModernMessageBoxWindow.Show(message, Texts.Message, MessageBoxButton.OK, icon);
         }
 
         public static MessageBoxResult Error(string message)
@@ -27,12 +33,12 @@ namespace RszTool.App.Common
 
         public static bool Confirm(string message)
         {
-            return MessageBox.Show(Application.Current.MainWindow, message, Texts.Message, MessageBoxButton.OKCancel) == MessageBoxResult.OK;
+            return ModernMessageBoxWindow.Show(message, Texts.Message, MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.OK;
         }
 
         public static MessageBoxResult YesNoCancel(string message)
         {
-            return MessageBox.Show(Application.Current.MainWindow, message, Texts.Message, MessageBoxButton.YesNoCancel);
+            return ModernMessageBoxWindow.Show(message, Texts.Message, MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
         }
     }
 }

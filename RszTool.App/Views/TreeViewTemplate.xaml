@@ -1,58 +1,86 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:RszTool.App.Views"
                     xmlns:common="clr-namespace:RszTool.App.Common"
                     xmlns:converters="clr-namespace:RszTool.App.Converters"
                     xmlns:viewmodels="clr-namespace:RszTool.App.ViewModels"
                     xmlns:res="clr-namespace:RszTool.App.Resources"
-                    xmlns:rsztool="clr-namespace:RszTool;assembly=RszTool">
+                    xmlns:rsztool="clr-namespace:RszTool;assembly=RszTool"
+                    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
 
     <converters:RszInstanceFieldsConverter x:Key="RszInstanceFieldsConverter"/>
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     <common:BindingProxy x:Key="ParentData" Data="{Binding}" />
 
+
     <HierarchicalDataTemplate DataType="{x:Type rsztool:RszInstance}" ItemsSource="{Binding ., Converter={StaticResource RszInstanceFieldsConverter}}">
-        <TextBlock Text="{Binding Name}">
-            <TextBlock.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="{res:Text Copy}" Command="{Binding Data.CopyInstance, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
-                    <MenuItem Header="{res:Text Paste}" Command="{Binding Data.PasteInstance, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
-                </ContextMenu>
-            </TextBlock.ContextMenu>
-        </TextBlock>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+            <TextBlock Text="{Binding Name}" VerticalAlignment="Center">
+                <TextBlock.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="{res:Text Copy}" Command="{Binding Data.CopyInstance, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
+                        <MenuItem Header="{res:Text Paste}" Command="{Binding Data.PasteInstance, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
+                        <MenuItem Header="重复 RSZ Object 副本 / 自动递增 ContextID" Command="{Binding Data.DuplicateRszObjectMulti, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
+                    </ContextMenu>
+                </TextBlock.ContextMenu>
+            </TextBlock>
+        </StackPanel>
     </HierarchicalDataTemplate>
 
     <HierarchicalDataTemplate DataType="{x:Type viewmodels:GameObejctComponentViewModel}" ItemsSource="{Binding Items}">
-        <TextBlock Text="{Binding Name}">
-            <TextBlock.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="{res:Text Copy}" Command="{Binding Data.CopyInstance, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
-                    <MenuItem Header="{res:Text Paste}" Command="{Binding Data.PasteInstance, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
-                    <MenuItem Header="{res:Text Remove}" Command="{Binding Data.RemoveComponent, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
-                </ContextMenu>
-            </TextBlock.ContextMenu>
-        </TextBlock>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center">
+                <TextBlock.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="{res:Text Copy}" Command="{Binding Data.CopyInstance, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
+                        <MenuItem Header="{res:Text Paste}" Command="{Binding Data.PasteInstance, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
+                        <MenuItem Header="Import Transform Points JSON"
+                                  Command="{Binding Data.ImportTransformPointsJson, Source={StaticResource ParentData}}"
+                                  CommandParameter="{Binding}"
+                                  Visibility="{Binding CanImportTransformPointsJson, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <MenuItem Header="{res:Text Remove}" Command="{Binding Data.RemoveComponent, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
+                    </ContextMenu>
+                </TextBlock.ContextMenu>
+            </TextBlock>
+        </StackPanel>
     </HierarchicalDataTemplate>
 
     <HierarchicalDataTemplate DataType="{x:Type viewmodels:RszFieldInstanceViewModel}" ItemsSource="{Binding Items}">
-        <TextBlock Text="{Binding Name}">
-            <TextBlock.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="{res:Text Copy}" Command="{Binding Data.CopyInstance, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
-                    <MenuItem Header="{res:Text Paste}" Command="{Binding Data.PasteInstance, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
-                </ContextMenu>
-            </TextBlock.ContextMenu>
-        </TextBlock>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+            <TextBlock Text="{Binding Name}" VerticalAlignment="Center">
+                <TextBlock.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="{res:Text Copy}" Command="{Binding Data.CopyInstance, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
+                        <MenuItem Header="{res:Text Paste}" Command="{Binding Data.PasteInstance, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
+                    </ContextMenu>
+                </TextBlock.ContextMenu>
+            </TextBlock>
+        </StackPanel>
     </HierarchicalDataTemplate>
 
     <HierarchicalDataTemplate DataType="{x:Type viewmodels:RszFieldArrayViewModel}" ItemsSource="{Binding Items}">
-        <TextBlock Text="{Binding Name}">
-            <TextBlock.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="{res:Text NewItem}" Command="{Binding Data.ArrayItemNew, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
-                    <MenuItem Header="{res:Text Paste}" Command="{Binding Data.ArrayItemPaste, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
-                </ContextMenu>
-            </TextBlock.ContextMenu>
-        </TextBlock>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+            <TextBlock Text="{Binding Name}" VerticalAlignment="Center">
+                <TextBlock.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="{res:Text NewItem}" Command="{Binding Data.ArrayItemNew, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
+                        <MenuItem Header="{res:Text Paste}" Command="{Binding Data.ArrayItemPaste, Source={StaticResource ParentData}}" CommandParameter="{Binding}" />
+                        <MenuItem Header="Generate Mercenaries SpawnPoints"
+                                  Command="{Binding Data.GenerateMercenariesSpawnPoints, Source={StaticResource ParentData}}"
+                                  CommandParameter="{Binding}"
+                                  Visibility="{Binding CanGenerateMercenariesSpawnPoints, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <MenuItem Header="Import Mercenaries SpawnPoints JSON"
+                                  Command="{Binding Data.ImportMercenariesSpawnPointsJson, Source={StaticResource ParentData}}"
+                                  CommandParameter="{Binding}"
+                                  Visibility="{Binding CanGenerateMercenariesSpawnPoints, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    </ContextMenu>
+                </TextBlock.ContextMenu>
+            </TextBlock>
+        </StackPanel>
     </HierarchicalDataTemplate>
 
     <HierarchicalDataTemplate DataType="{x:Type viewmodels:RszFieldArrayInstanceItemViewModel}" ItemsSource="{Binding Items}">

@@ -1,0 +1,128 @@
+<ui:FluentWindow x:Class="RszTool.App.Views.BatchIdEditWindow"
+ xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+ WindowBackdropType="Mica"
+ ExtendsContentIntoTitleBar="True"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="clr-namespace:RszTool.App.Views" xmlns:vm="clr-namespace:RszTool.App.ViewModels"
+ xmlns:converters="clr-namespace:RszTool.App.Converters" xmlns:rsztool="clr-namespace:RszTool;assembly=RszTool"
+ Title="物体 / 子对象批量编辑与掉落随机化" Width="1450" Height="920" MinWidth="1050" MinHeight="680" WindowStartupLocation="CenterOwner">
+ <Window.Resources>
+  <ResourceDictionary>
+   <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="TreeViewStyles.xaml"/><ResourceDictionary Source="TreeViewTemplate.xaml"/></ResourceDictionary.MergedDictionaries>
+   <converters:ScnGameObjectDataSubItemsConverter x:Key="ScnObjectConverter"/><converters:PfbGameObjectDataSubItemsConverter x:Key="PfbObjectConverter"/>
+   <HierarchicalDataTemplate DataType="{x:Type rsztool:ScnFile+GameObjectData}" ItemsSource="{Binding Converter={StaticResource ScnObjectConverter}}"><TextBlock Text="{Binding Name}"/></HierarchicalDataTemplate>
+   <HierarchicalDataTemplate DataType="{x:Type rsztool:PfbFile+GameObjectData}" ItemsSource="{Binding Converter={StaticResource PfbObjectConverter}}"><TextBlock Text="{Binding Name}"/></HierarchicalDataTemplate>
+   <DataTemplate DataType="{x:Type vm:RszFieldNormalViewModel}">
+    <local:FieldValueEdit EnumDict="{Binding EnumDict, RelativeSource={RelativeSource AncestorType=Window}}">
+     <local:FieldValueEdit.ContextMenu><ContextMenu><MenuItem Header="将此字段值应用到已勾选物体的同类字段" CommandParameter="{Binding}" Click="CopyFieldToChecked_Click"/></ContextMenu></local:FieldValueEdit.ContextMenu>
+    </local:FieldValueEdit>
+   </DataTemplate>
+   <DataTemplate DataType="{x:Type vm:RszFieldArrayNormalItemViewModel}">
+    <local:FieldValueEdit EnumDict="{Binding EnumDict, RelativeSource={RelativeSource AncestorType=Window}}">
+     <local:FieldValueEdit.ContextMenu><ContextMenu><MenuItem Header="将此数组项值应用到已勾选物体的同类同序号字段" CommandParameter="{Binding}" Click="CopyFieldToChecked_Click"/></ContextMenu></local:FieldValueEdit.ContextMenu>
+    </local:FieldValueEdit>
+   </DataTemplate>
+  </ResourceDictionary>
+ </Window.Resources>
+ <Grid>
+  <Grid.RowDefinitions>
+    <RowDefinition Height="Auto"/>
+    <RowDefinition Height="*"/>
+  </Grid.RowDefinitions>
+  <ui:TitleBar Grid.Row="0" Title="批量扫描 / 修改子对象编号 (ContextID · StageID · DropItem · UVAR)" Padding="10,4"/>
+  <Grid Grid.Row="1" Margin="12">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Grid.Row="0"
+          Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+          BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+          BorderThickness="1"
+          CornerRadius="6"
+          Padding="12"
+          Margin="0,0,0,10">
+    <StackPanel>
+   <TextBlock x:Name="ScopeText" FontWeight="Bold" TextWrapping="Wrap"/>
+   <WrapPanel Margin="0,8,0,6">
+    <ComboBox x:Name="ScopeMode" Width="250" SelectedIndex="0" SelectionChanged="ScopeMode_Changed"><ComboBoxItem Content="入口物体及全部子对象"/><ComboBoxItem Content="仅入口物体"/><ComboBoxItem Content="仅子对象（递归）"/></ComboBox>
+    <CheckBox x:Name="CollapseNames" Content="折叠同名子对象" IsChecked="True" VerticalAlignment="Center" Margin="16,0" Click="CollapseNames_Click"/>
+    <ui:Button Content="重新扫描列表" Click="Rescan_Click" Padding="12,4"/>
+   </WrapPanel>
+   <TextBlock x:Name="ScanText" TextWrapping="Wrap"/>
+   <WrapPanel Margin="0,8,0,0">
+    <TextBlock Text="批量掉落开关：" VerticalAlignment="Center"/>
+    <CheckBox x:Name="ShouldDropInput" Content="_ShouldDropItem" IsThreeState="True" IsChecked="{x:Null}" Margin="8,0,16,0" VerticalAlignment="Center"/>
+    <CheckBox x:Name="ShouldDropRandomInput" Content="_ShouldDropItemAtRandom" IsThreeState="True" IsChecked="{x:Null}" Margin="0,0,16,0" VerticalAlignment="Center"/>
+    <TextBlock Text="实心方块=不修改，打勾=开启，空框=关闭；适用于批量设置和掉落随机化。" VerticalAlignment="Center"/>
+   </WrapPanel>
+  </StackPanel>
+  </Border>
+  <Grid Grid.Row="1">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="470" MinWidth="330"/><ColumnDefinition Width="6"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+          BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+          BorderThickness="1"
+          CornerRadius="6"
+          Padding="8">
+      <DockPanel>
+    <StackPanel DockPanel.Dock="Top">
+     <TextBlock Text="物体 / 子对象列表 · 勾选后才参与批量操作" FontWeight="Bold" Margin="0,0,0,6"/>
+     <TextBox x:Name="ObjectSearch" TextChanged="ObjectSearch_Changed" ToolTip="按名称或完整路径筛选" Margin="0,0,0,6"/>
+     <WrapPanel Margin="0,0,0,6">
+      <ui:Button Content="全选" Click="SelectAll_Click" Padding="9,3" Margin="0,0,5,0"/><ui:Button Content="全不选" Click="SelectNone_Click" Padding="9,3" Margin="0,0,5,0"/>
+      <ui:Button Content="勾选高亮项" Click="CheckHighlighted_Click" Padding="9,3" Margin="0,0,5,0"/><ui:Button Content="取消高亮项" Click="UncheckHighlighted_Click" Padding="9,3"/>
+     </WrapPanel>
+     <TextBlock Text="Ctrl / Shift 高亮多选，复选框决定处理范围。单击物体后可在右侧编辑原始字段。" TextWrapping="Wrap" Margin="0,0,0,6"/>
+    </StackPanel>
+    <ListView x:Name="ObjectList" SelectionMode="Extended" SelectionChanged="ObjectList_SelectionChanged">
+     <ListView.GroupStyle><GroupStyle><GroupStyle.ContainerStyle><Style TargetType="GroupItem"><Setter Property="Template"><Setter.Value>
+      <ControlTemplate TargetType="GroupItem"><Expander IsExpanded="True"><Expander.Header><StackPanel>
+       <StackPanel Orientation="Horizontal"><TextBlock Text="子对象 ×" FontWeight="Bold"/><TextBlock Text="{Binding ItemCount}" FontWeight="Bold" Margin="0,0,8,0"/>
+        <ui:Button Content="勾选此组" Tag="{Binding}" Click="CheckGroup_Click" Padding="6,1" Margin="0,0,4,0"/><ui:Button Content="取消此组" Tag="{Binding}" Click="UncheckGroup_Click" Padding="6,1"/>
+       </StackPanel><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" MaxWidth="420" ToolTip="{Binding Name}"/>
+      </StackPanel></Expander.Header><ItemsPresenter/></Expander></ControlTemplate>
+     </Setter.Value></Setter></Style></GroupStyle.ContainerStyle></GroupStyle></ListView.GroupStyle>
+     <ListView.ItemTemplate><DataTemplate DataType="{x:Type vm:BatchObjectRow}"><DockPanel Margin="2,4">
+      <CheckBox IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Margin="0,2,8,0"/>
+      <StackPanel Width="380"><TextBlock Text="{Binding Name}" FontWeight="SemiBold"/><TextBlock Text="{Binding Path}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}" Opacity="0.7"/>
+       <StackPanel Orientation="Horizontal"><TextBlock Text="Context: "/><TextBlock Text="{Binding ContextCount}" Margin="0,0,12,0"/><TextBlock Text="Stage: "/><TextBlock Text="{Binding StageCount}" Margin="0,0,12,0"/><TextBlock Text="Item: "/><TextBlock Text="{Binding ItemCount}"/></StackPanel>
+       <TextBlock Text="{Binding ItemSummary}" TextTrimming="CharacterEllipsis" ToolTip="{Binding ItemSummary}"/>
+       <TextBlock Text="{Binding DropFlagSummary}" TextTrimming="CharacterEllipsis" ToolTip="{Binding DropFlagSummary}"/>
+      </StackPanel>
+     </DockPanel></DataTemplate></ListView.ItemTemplate>
+    </ListView>
+   </DockPanel>
+    </Border>
+   <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"/>
+   <Grid Grid.Column="2" Margin="8,0,0,0">
+    <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="6"/><RowDefinition Height="230" MinHeight="130"/></Grid.RowDefinitions>
+    <TabControl x:Name="EditTabs">
+     <TabItem Header="批量设置 ID"><StackPanel Margin="12">
+      <TextBlock Text="仅修改已勾选物体本身。需要处理子对象时，请在列表中勾选对应子对象。" TextWrapping="Wrap" Margin="0,0,0,12"/>
+      <WrapPanel Margin="0,4"><CheckBox x:Name="SetContext" Content="ContextID" Width="100" VerticalAlignment="Center"/><TextBlock Text="Group" VerticalAlignment="Center"/><TextBox x:Name="GroupInput" Text="0" Width="75" Margin="8,0,14,0"/><TextBlock Text="起始 Index" VerticalAlignment="Center"/><TextBox x:Name="IndexInput" Text="0" Width="85" Margin="8,0,14,0"/><TextBlock Text="步长" VerticalAlignment="Center"/><TextBox x:Name="StepInput" Text="1" Width="60" Margin="8,0,0,0"/></WrapPanel>
+      <DockPanel Margin="0,14"><CheckBox x:Name="SetStage" Content="chainsaw.StageID" Width="150" VerticalAlignment="Center"/><local:FieldValueInput TypeName="chainsaw.StageID" ValueType="{x:Static rsztool:RszFieldType.S32}" Value="{Binding StageValue, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}" EnumDict="{Binding EnumDict, RelativeSource={RelativeSource AncestorType=Window}}"/></DockPanel>
+      <DockPanel Margin="0,0,0,14"><CheckBox x:Name="SetItem" Content="_DropItemID" Width="150" VerticalAlignment="Center"/><local:FieldValueInput TypeName="chainsaw.ItemID" ValueType="{x:Static rsztool:RszFieldType.S32}" Value="{Binding ItemValue, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}" EnumDict="{Binding EnumDict, RelativeSource={RelativeSource AncestorType=Window}}"/></DockPanel>
+      <WrapPanel><ui:Button Content="预览已勾选物体的修改" Click="Preview_Click" Padding="12,6" Margin="0,0,8,0"/><ui:Button Content="应用已勾选物体的修改" Click="Apply_Click" Padding="12,6"/></WrapPanel>
+     </StackPanel></TabItem>
+     <TabItem Header="原始字段 / 多物体批量编辑"><DockPanel Margin="8"><StackPanel DockPanel.Dock="Top" Margin="0,0,0,8"><TextBlock x:Name="DetailTitle" Text="从左侧选择物体，复用原始子物体编辑器" TextWrapping="Wrap"/><TextBlock Text="字段右键 → 应用到已勾选物体的同类字段；数组项按同序号匹配。直接输入会修改当前物体。" TextWrapping="Wrap"/></StackPanel><TreeView x:Name="DetailTree" local:FieldValueInput.ValueChanged="Detail_ValueChanged" local:FieldValueInput.ResourceChanged="Detail_ResourceChanged"/></DockPanel></TabItem>
+     <TabItem Header="掉落物随机化"><DockPanel Margin="10">
+      <StackPanel DockPanel.Dock="Top">
+       <TextBlock Text="比例按目标数取整，再随机分配位置。例如 7:3 表示约 70% / 30%，总和无需为 100。" TextWrapping="Wrap" Margin="0,0,0,8"/>
+       <TextBlock Text="只随机修改 _DropItemID；上方两个掉落开关可同时批量设置。" TextWrapping="Wrap" Margin="0,0,0,8"/>
+       <WrapPanel Margin="0,0,0,8"><TextBlock Text="随机种子" VerticalAlignment="Center"/><TextBox x:Name="SeedInput" Text="1" Width="105" Margin="8,0"/><ui:Button Content="换一批位置" Click="NewSeed_Click" Padding="9,4" Margin="0,0,8,0"/><ui:Button Content="添加掉落物" Click="AddDrop_Click" Padding="9,4" Margin="0,0,8,0"/><ui:Button Content="移除比例行" Click="RemoveDrop_Click" Padding="9,4"/></WrapPanel>
+      </StackPanel>
+      <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0"><TextBlock Text="每个有匹配 ItemID 的物体分配一种掉落；共享字段的物体视为同一分配单元，无匹配字段的物体跳过。" TextWrapping="Wrap" Margin="0,0,0,8"/><WrapPanel><ui:Button Content="预览随机分配" Click="PreviewDrops_Click" Padding="12,6" Margin="0,0,8,0"/><ui:Button Content="应用预览的随机分配" Click="ApplyDrops_Click" Padding="12,6"/></WrapPanel></StackPanel>
+      <DataGrid x:Name="DropGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" SelectionMode="Extended"><DataGrid.Columns>
+       <DataGridTemplateColumn Header="掉落物 ItemID / 名称" Width="*"><DataGridTemplateColumn.CellTemplate><DataTemplate><local:FieldValueInput TypeName="chainsaw.ItemID" ValueType="{x:Static rsztool:RszFieldType.S32}" Value="{Binding ItemId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" EnumDict="{Binding EnumDict, RelativeSource={RelativeSource AncestorType=Window}}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+       <DataGridTextColumn Header="比例 / 权重" Binding="{Binding Weight, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}" Width="110"/>
+      </DataGrid.Columns></DataGrid>
+     </DockPanel></TabItem>
+    </TabControl>
+    <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch"/>
+    <DataGrid Grid.Row="2" x:Name="PreviewGrid" IsReadOnly="True" AutoGenerateColumns="False" CanUserAddRows="False" EnableRowVirtualization="True"><DataGrid.Columns>
+     <DataGridTextColumn Header="目标物体 / 组件 / 引用路径" Binding="{Binding Path}" Width="*"/><DataGridTextColumn Header="字段" Binding="{Binding Field}" Width="100"/><DataGridTextColumn Header="原值 / 名称" Binding="{Binding OldValue}" Width="170"/><DataGridTextColumn Header="新值 / 名称" Binding="{Binding NewValue}" Width="170"/>
+    </DataGrid.Columns></DataGrid>
+   </Grid>
+  </Grid>
+  <DockPanel Grid.Row="2" Margin="0,10,0,0"><ui:Button DockPanel.Dock="Right" Content="关闭" Width="90" IsCancel="True" Margin="10,0,0,0"/><StackPanel><TextBlock x:Name="SelectionText" FontWeight="Bold"/><TextBlock x:Name="StatusText" TextWrapping="Wrap"/></StackPanel></DockPanel>
+ </Grid>
+  </Grid>
+</ui:FluentWindow>

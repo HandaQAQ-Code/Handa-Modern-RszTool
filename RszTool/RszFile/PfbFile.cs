@@ -271,7 +271,7 @@ namespace RszTool
 
             handler.Align(16);
             header.dataOffset = handler.Tell();
-            WriteRsz(RSZ!, header.dataOffset);
+            if (!WriteRsz(RSZ!, header.dataOffset)) return false;
 
             header.magic = Magic;
             header.infoCount = GameObjectInfoList.Count;

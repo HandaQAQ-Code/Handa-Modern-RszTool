@@ -27,7 +27,7 @@ namespace RszTool.App.ViewModels
         public TextSearchOptionViewModel GameObjectNameOption { get; } = new();
         // 按包含的组件搜索
         public InstanceSearchViewModel ComponentSearch { get; } = new();
-        public bool IncludeChildren { get; set; } = false;
+        public bool IncludeChildren { get; set; } = true;
     }
 
 
@@ -190,7 +190,7 @@ namespace RszTool.App.ViewModels
             if (componentFilter.Enable)
             {
                 bool matched = false;
-                foreach (var instance in gameObject.Components)
+                foreach (var (_, instance) in Re4IdEditor.Walk(gameObject.Components.Select(x => (x.Name, x))))
                 {
                     if (componentFilter.IsMatch(instance))
                     {

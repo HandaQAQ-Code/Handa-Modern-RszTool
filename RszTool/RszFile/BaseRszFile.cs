@@ -94,7 +94,7 @@ namespace RszTool
             return WriteTo(new FileHandler(path, true));
         }
 
-        public bool Save()
+        public virtual bool Save()
         {
             if (Write())
             {
@@ -104,7 +104,7 @@ namespace RszTool
             return false;
         }
 
-        public bool SaveAs(string path)
+        public virtual bool SaveAs(string path)
         {
             bool result = Write();
             FileHandler.SaveAs(path);

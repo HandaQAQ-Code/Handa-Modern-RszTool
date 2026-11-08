@@ -30,4 +30,14 @@ namespace RszTool.App.ViewModels
 
     public class GameObjectsHeader(string name, IEnumerable<object>? items) : TreeItemViewModel(name, items);
     public class FoldersHeader(string name, IEnumerable<object>? items) : TreeItemViewModel(name, items);
+
+    public class ScnGameObjectsHeader(
+        string name,
+        IEnumerable<ScnFile.GameObjectData>? items,
+        ScnFile.FolderData? folder = null,
+        ScnFile.GameObjectData? parent = null) : TreeItemViewModel(name, items)
+    {
+        public ScnFile.FolderData? Folder { get; } = folder;
+        public ScnFile.GameObjectData? Parent { get; } = parent;
+    }
 }

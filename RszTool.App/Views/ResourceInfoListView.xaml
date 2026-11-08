@@ -1,0 +1,41 @@
+<UserControl x:Class="RszTool.App.Views.ResourceInfoListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:viewmodels="clr-namespace:RszTool.App.ViewModels"
+             xmlns:res="clr-namespace:RszTool.App.Resources"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=viewmodels:UserFileViewModel}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal" Margin="0 0 0 6">
+            <ui:Button Content="{res:Text Copy}" Command="{Binding CopyResourceInfo}" Appearance="Secondary" Margin="0 0 6 0" Padding="10,4" />
+            <ui:Button Content="{res:Text Paste}" Command="{Binding PasteResourceInfo}" Appearance="Secondary" Margin="0 0 6 0" Padding="10,4" />
+            <ui:Button Content="{res:Text Remove}" Command="{Binding RemoveResourceInfo}" Appearance="Secondary" Padding="10,4" />
+        </StackPanel>
+        <ListView x:Name="ResourceListView"
+                  Grid.Row="1"
+                  ItemsSource="{Binding UserFile.ResourceInfoList}"
+                  SelectionMode="Extended"
+                  SelectionChanged="ResourceListView_SelectionChanged"
+                  MouseDoubleClick="ResourceListView_MouseDoubleClick">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Path" DisplayMemberBinding="{Binding Path}" Width="700" />
+                </GridView>
+            </ListView.View>
+            <ListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="{res:Text Copy}" Command="{Binding CopyResourceInfo}" />
+                    <MenuItem Header="{res:Text Paste}" Command="{Binding PasteResourceInfo}" />
+                    <MenuItem Header="{res:Text Remove}" Command="{Binding RemoveResourceInfo}" />
+                </ContextMenu>
+            </ListView.ContextMenu>
+        </ListView>
+    </Grid>
+</UserControl>

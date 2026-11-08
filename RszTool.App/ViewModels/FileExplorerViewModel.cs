@@ -91,7 +91,7 @@ namespace RszTool.App.ViewModels
     {
         private static readonly IComparer<BaseFileItem> comparer =
             Comparer<BaseFileItem>.Create((x, y) => x.Name.CompareTo(y.Name));
-        private static readonly HashSet<string> Filter = new() { ".pfb", ".scn", ".user" };
+        private static readonly HashSet<string> Filter = new() { ".pfb", ".scn", ".user", ".uvar" };
 
         private ObservableCollection<BaseFileItem>? children;
 

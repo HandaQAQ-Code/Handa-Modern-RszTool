@@ -1,0 +1,119 @@
+<UserControl x:Class="RszTool.App.Views.UvarFileView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <DockPanel Margin="10">
+        <!-- Top Controls & Actions Card -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="12"
+                Margin="0,0,0,10">
+            <StackPanel>
+                <!-- Title & Hints -->
+                <DockPanel Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Tag24" Margin="0,0,8,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="UVAR / Flag 变量标志管理库" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextForeground}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="【已使用】标记将自动记录触发状态；支持 Ctrl / Shift 多选后批量标记与批处理"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextForeground}"
+                               Opacity="0.75"
+                               FontSize="12"/>
+                </DockPanel>
+
+                <!-- Filter Controls Bar -->
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="120"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox ItemsSource="{Binding Groups}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedGroup}"
+                              Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="1" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="输入名称、GUID、分组或备注实时过滤" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="2" SelectedIndex="{Binding UsageFilter}" Margin="0,0,8,0" VerticalAlignment="Center">
+                        <ComboBoxItem Content="全部使用状态"/>
+                        <ComboBoxItem Content="已使用"/>
+                        <ComboBoxItem Content="未使用"/>
+                    </ComboBox>
+                    <CheckBox Grid.Column="3" Content="仅显示 Flag" IsChecked="{Binding FlagsOnly}" VerticalAlignment="Center"/>
+                </Grid>
+
+                <!-- Action Buttons Ribbon -->
+                <WrapPanel>
+                    <ui:Button Icon="{ui:SymbolIcon Add20}" Content="批量创建 Flag（按数值）"
+                               Command="{Binding BatchCreateFlags}" Appearance="Primary" Padding="12,5" Margin="0,0,8,0" />
+                    <ui:Button Icon="{ui:SymbolIcon DocumentAdd20}" Content="手动创建"
+                               Command="{Binding CreateFlags}" Appearance="Secondary" Padding="12,5" Margin="0,0,8,0" />
+                    <ui:Button Icon="{ui:SymbolIcon CheckmarkCircle20}" Content="标记所选为已使用"
+                               Command="{Binding MarkUsed}" Appearance="Secondary" Padding="12,5" Margin="0,0,8,0" />
+                    <ui:Button Icon="{ui:SymbolIcon DismissCircle20}" Content="标记所选为未使用"
+                               Command="{Binding MarkUnused}" Appearance="Secondary" Padding="12,5" Margin="0,0,8,0" />
+                    <ui:Button Icon="{ui:SymbolIcon Edit20}" Content="编辑使用备注"
+                               Command="{Binding SetUsageNote}" Appearance="Secondary" Padding="12,5" Margin="0,0,8,0" />
+                    <ui:Button Icon="{ui:SymbolIcon Delete20}" Content="删除所选 Flag"
+                               Command="{Binding DeleteFlags}" Appearance="Danger" Padding="12,5" />
+                </WrapPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Bottom Summary Info -->
+        <Border DockPanel.Dock="Bottom" Margin="0,8,0,0" Padding="4">
+            <DockPanel>
+                <TextBlock Text="{Binding UsagePath}" ToolTip="已使用标记数据的持久化存储路径"
+                           Foreground="{DynamicResource TextForeground}" Opacity="0.6"
+                           FontSize="11" VerticalAlignment="Center" DockPanel.Dock="Right"/>
+                <TextBlock Text="{Binding SelectionSummary}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextForeground}"
+                           VerticalAlignment="Center"/>
+            </DockPanel>
+        </Border>
+
+        <!-- Modern DataGrid Card -->
+        <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="2">
+            <DataGrid x:Name="FlagGrid" ItemsSource="{Binding Flags}" AutoGenerateColumns="False" CanUserAddRows="False"
+                      CanUserDeleteRows="False" SelectionMode="Extended" SelectionUnit="FullRow" SelectionChanged="Grid_SelectionChanged"
+                      EnableRowVirtualization="True" EnableColumnVirtualization="True"
+                      BorderThickness="0" Background="Transparent">
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Used}" Value="True">
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Header="已使用" Binding="{Binding Used}" IsReadOnly="True" Width="70"/>
+                    <DataGridTextColumn Header="Flag 标志名称" Binding="{Binding Name}" IsReadOnly="True" Width="240"/>
+                    <DataGridTemplateColumn Header="默认 True/False" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding DefaultValue, UpdateSourceTrigger=PropertyChanged}"
+                                          IsEnabled="{Binding Variable.IsFlag}" HorizontalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="使用备注" Binding="{Binding Note}" IsReadOnly="True" Width="200"/>
+                    <DataGridTextColumn Header="所属分组" Binding="{Binding GroupPath}" IsReadOnly="True" Width="240"/>
+                    <DataGridTextColumn Header="GUID 触发器标识" Binding="{Binding Id}" IsReadOnly="True" Width="280"/>
+                    <DataGridTextColumn Header="类型" Binding="{Binding Type}" IsReadOnly="True" Width="100"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </DockPanel>
+</UserControl>

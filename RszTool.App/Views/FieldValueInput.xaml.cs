@@ -3,6 +3,8 @@ using System.Numerics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using RszTool.App.Common;
+using RszTool.App.ViewModels;
 
 namespace RszTool.App.Views
 {
@@ -25,11 +27,22 @@ namespace RszTool.App.Views
 
         public static readonly DependencyProperty TypeNameProperty =
             DependencyProperty.Register("TypeName", typeof(string), typeof(FieldValueInput),
-                new PropertyMetadata(null));
+                new PropertyMetadata(null, OnEnumMetadataChanged));
 
         public static readonly DependencyProperty EnumDictProperty =
             DependencyProperty.Register("EnumDict", typeof(EnumDict), typeof(FieldValueInput),
-                new PropertyMetadata(null));
+                new PropertyMetadata(null, OnEnumMetadataChanged));
+
+        public static readonly DependencyProperty EnumItemsProperty =
+            DependencyProperty.Register(nameof(EnumItems), typeof(EnumItem[]), typeof(FieldValueInput), new PropertyMetadata(null));
+
+        private static void OnEnumMetadataChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (FieldValueInput)d;
+            control.SetValue(EnumItemsProperty, control.TypeName == null ? null :
+                (control.EnumDict?[control.TypeName] ?? control.EnumDict?[RszInstance.GetElementType(control.TypeName)])?.Items);
+            if (control.ValueType != RszFieldType.not_init) control.ContentTemplate = SelectTemplate(control.ValueType, control);
+        }
 
         // Register a custom routed event using the Bubble routing strategy.
         public static readonly RoutedEvent ValueChangedEvent = EventManager.RegisterRoutedEvent(
@@ -146,7 +159,7 @@ namespace RszTool.App.Views
             remove { RemoveHandler(ResourceChangedEvent, value); }
         }
 
-        public EnumItem[]? EnumItems => TypeName != null ? EnumDict?[TypeName]?.Items : null;
+        public EnumItem[]? EnumItems => (EnumItem[]?)GetValue(EnumItemsProperty);
 
         private void RaiseValueChanged()
         {
@@ -179,6 +192,29 @@ namespace RszTool.App.Views
             Value = Guid.NewGuid();
             RaiseValueChanged();
         }
+
+        private void OnGuidChooseUvar(object sender, RoutedEventArgs e) => AppUtils.TryActionSimple(() =>
+        {
+            var owner = Window.GetWindow(this) ?? Application.Current.MainWindow;
+            if (string.IsNullOrWhiteSpace(App.Instance.SaveData.UvarFilePath))
+            {
+                var settings = new UvarSettingsWindow { Owner = owner };
+                if (settings.ShowDialog() != true) return;
+            }
+            var document = App.Instance.UvarWorkspace.RequireDocument();
+            var picker = new UvarGuidPickerWindow(document, Value is Guid current ? current : Guid.Empty) { Owner = owner };
+            if (picker.ShowDialog() != true || picker.ChosenFlag is not UvarFlagRow flag) return;
+            // Keep the Value binding attached and commit through the normal field editor pipeline.
+            SetCurrentValue(ValueProperty, flag.Variable.Id);
+            GetBindingExpression(ValueProperty)?.UpdateSource();
+            RaiseValueChanged();
+            if (picker.MarkUsed)
+            {
+                string note = flag.Note;
+                if (string.IsNullOrWhiteSpace(note) && DataContext is IFieldValueViewModel field) note = $"USER / {field.Name}";
+                document.MarkChosen(flag, note);
+            }
+        });
     }
 
 
