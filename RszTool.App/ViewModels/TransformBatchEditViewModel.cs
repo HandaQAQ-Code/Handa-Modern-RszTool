@@ -37,11 +37,12 @@ namespace RszTool.App.ViewModels
     public class TransformBatchEditViewModel
     {
         public TransformBatchAxisEdit X { get; } = new() { Name = "X" };
-        public TransformBatchAxisEdit Y { get; } = new() { Name = "Y" };
         public TransformBatchAxisEdit Z { get; } = new() { Name = "Z" };
-        public TransformBatchAxisEdit J { get; } = new() { Name = "J" };
+        public TransformBatchAxisEdit Y { get; } = new() { Name = "Y" };
+        public TransformBatchAxisEdit W { get; } = new() { Name = "W" };
+        public TransformBatchAxisEdit J => W;
 
-        public TransformBatchAxisEdit[] Axes => [X, Y, Z, J];
+        public TransformBatchAxisEdit[] Axes => [X, Z, Y, W];
 
         public int SelectedGameObjectCount { get; set; }
         public int TransformCount { get; private set; }
@@ -92,9 +93,9 @@ namespace RszTool.App.ViewModels
         private Vector4 ApplyVector(Vector4 value, int objectIndex)
         {
             if (X.Enabled) value.X = X.Apply(value.X, objectIndex);
-            if (Y.Enabled) value.Y = Y.Apply(value.Y, objectIndex);
             if (Z.Enabled) value.Z = Z.Apply(value.Z, objectIndex);
-            if (J.Enabled) value.W = J.Apply(value.W, objectIndex);
+            if (Y.Enabled) value.Y = Y.Apply(value.Y, objectIndex);
+            if (W.Enabled) value.W = W.Apply(value.W, objectIndex);
             return value;
         }
     }

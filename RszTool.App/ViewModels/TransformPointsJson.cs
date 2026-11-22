@@ -16,11 +16,11 @@ namespace RszTool.App.ViewModels
             "{0:000}: T({1:0.######}, {2:0.######}, {3:0.######}, 0)    R({4:0.######}, {5:0.######}, {6:0.######}, {7:0.######})",
             Index,
             Position.X,
-            Position.Y,
             Position.Z,
+            Position.Y,
             Rotation.X,
-            Rotation.Y,
             Rotation.Z,
+            Rotation.Y,
             Rotation.W);
     }
 

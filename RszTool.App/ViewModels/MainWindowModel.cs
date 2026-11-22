@@ -17,6 +17,7 @@ namespace RszTool.App.ViewModels
 {
     public class MainWindowModel : INotifyPropertyChanged
     {
+        public static MainWindowModel? Instance { get; private set; }
         public event PropertyChangedEventHandler? PropertyChanged;
         public ObservableCollection<HeaderedItemViewModel> Items { get; } = new();
         public HeaderedItemViewModel? SelectedTabItem { get; set; }
@@ -93,6 +94,7 @@ namespace RszTool.App.ViewModels
 
         public MainWindowModel()
         {
+            Instance = this;
             foreach (var path in SaveData.OpenedFolders)
             {
                 FileExplorerViewModel.Folders.Add(new(path));
@@ -188,7 +190,7 @@ namespace RszTool.App.ViewModels
                     return;
                 }
                 content.DataContext = fileViewModel;
-                HeaderedItemViewModel header = new FileTabItemViewModel(fileViewModel, content);
+                HeaderedItemViewModel header = new FileTabItemViewModel(fileViewModel, content, this);
                 Items.Add(header);
                 SelectedTabItem = header;
                 IsUvarMode = false;
@@ -374,14 +376,58 @@ namespace RszTool.App.ViewModels
             var about = new AboutWindow();
             about.ShowDialog();
         }
+
+        public void CloseTab(FileTabItemViewModel tab)
+        {
+            if (OnTabClose(tab))
+            {
+                Items.Remove(tab);
+            }
+        }
+
+        public void CloseOtherTabs(FileTabItemViewModel keepTab)
+        {
+            SelectedTabItem = keepTab;
+            var toClose = Items.OfType<FileTabItemViewModel>().Where(t => t != keepTab).ToList();
+            foreach (var tab in toClose)
+            {
+                if (!OnTabClose(tab)) break;
+                Items.Remove(tab);
+            }
+        }
+
+        public void CloseRightTabs(FileTabItemViewModel currentTab)
+        {
+            int index = Items.IndexOf(currentTab);
+            if (index < 0) return;
+            var toClose = Items.OfType<FileTabItemViewModel>().Skip(index + 1).ToList();
+            foreach (var tab in toClose)
+            {
+                if (!OnTabClose(tab)) break;
+                Items.Remove(tab);
+            }
+        }
+
+        public void CloseAllTabs()
+        {
+            var toClose = Items.OfType<FileTabItemViewModel>().ToList();
+            foreach (var tab in toClose)
+            {
+                if (!OnTabClose(tab)) break;
+                Items.Remove(tab);
+            }
+        }
     }
 
 
     public class FileTabItemViewModel : HeaderedItemViewModel
     {
-        public FileTabItemViewModel(BaseRszFileViewModel fileViewModel, object content, bool isSelected = false)
+        public MainWindowModel? OwnerModel { get; set; }
+
+        public FileTabItemViewModel(BaseRszFileViewModel fileViewModel, object content, MainWindowModel? owner = null, bool isSelected = false)
             : base(fileViewModel.FileName!, content, isSelected)
         {
+            OwnerModel = owner;
             FileViewModel = fileViewModel;
             fileViewModel.HeaderChanged += UpdateHeader;
         }
@@ -392,5 +438,41 @@ namespace RszTool.App.ViewModels
         {
             Header = FileViewModel.FileName + (FileViewModel.Changed ? "*" : "");
         }
+
+        private MainWindowModel? GetModel() => OwnerModel ?? MainWindowModel.Instance ?? (Application.Current?.MainWindow?.DataContext as MainWindowModel);
+
+        public RelayCommand CloseCommand => new(_ => GetModel()?.CloseTab(this));
+        public RelayCommand CloseOthersCommand => new(_ => GetModel()?.CloseOtherTabs(this));
+        public RelayCommand CloseRightCommand => new(_ => GetModel()?.CloseRightTabs(this));
+        public RelayCommand CloseAllCommand => new(_ => GetModel()?.CloseAllTabs());
+        public RelayCommand CopyPathCommand => new(_ =>
+        {
+            if (!string.IsNullOrEmpty(FileViewModel.FilePath))
+            {
+                Clipboard.SetText(FileViewModel.FilePath);
+            }
+        });
+        public RelayCommand OpenInExplorerCommand => new(_ =>
+        {
+            if (!string.IsNullOrEmpty(FileViewModel.FilePath))
+            {
+                try
+                {
+                    if (File.Exists(FileViewModel.FilePath))
+                    {
+                        System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{FileViewModel.FilePath}\"");
+                    }
+                    else
+                    {
+                        string? dir = Path.GetDirectoryName(FileViewModel.FilePath);
+                        if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                        {
+                            System.Diagnostics.Process.Start("explorer.exe", $"\"{dir}\"");
+                        }
+                    }
+                }
+                catch { }
+            }
+        });
     }
 }

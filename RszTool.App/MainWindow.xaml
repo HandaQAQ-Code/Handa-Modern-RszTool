@@ -43,9 +43,51 @@
                 <Setter Property="BorderBrush" Value="Transparent"/>
                 <Setter Property="BorderThickness" Value="1,1,1,0"/>
                 <Setter Property="Margin" Value="2,2,2,0"/>
-                <Setter Property="Padding" Value="10,6,8,6"/>
+                <Setter Property="Padding" Value="8,4,6,4"/>
+                <Setter Property="MinHeight" Value="36"/>
+                <Setter Property="Height" Value="36"/>
+                <Setter Property="MinWidth" Value="110"/>
+                <Setter Property="MaxWidth" Value="240"/>
+                <Setter Property="ClipToBounds" Value="True"/>
                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="ContextMenu">
+                    <Setter.Value>
+                        <ContextMenu>
+                            <MenuItem Header="关闭标签页" InputGestureText="Ctrl+W" Command="{Binding CloseCommand}">
+                                <MenuItem.Icon>
+                                    <ui:SymbolIcon Symbol="Dismiss16" FontSize="14"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="关闭其他标签页" Command="{Binding CloseOthersCommand}">
+                                <MenuItem.Icon>
+                                    <ui:SymbolIcon Symbol="DismissCircle16" FontSize="14"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="关闭右侧标签页" Command="{Binding CloseRightCommand}">
+                                <MenuItem.Icon>
+                                    <ui:SymbolIcon Symbol="ArrowRight16" FontSize="14"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="关闭所有标签页" Command="{Binding CloseAllCommand}">
+                                <MenuItem.Icon>
+                                    <ui:SymbolIcon Symbol="DismissSquareMultiple16" FontSize="14"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <Separator/>
+                            <MenuItem Header="复制文件完整路径" Command="{Binding CopyPathCommand}">
+                                <MenuItem.Icon>
+                                    <ui:SymbolIcon Symbol="Copy16" FontSize="14"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="在文件资源管理器中显示" Command="{Binding OpenInExplorerCommand}">
+                                <MenuItem.Icon>
+                                    <ui:SymbolIcon Symbol="FolderOpen16" FontSize="14"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </Setter.Value>
+                </Setter>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type dragablz:DragablzItem}">
@@ -54,24 +96,17 @@
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
                                     CornerRadius="6,6,0,0"
+                                    MinHeight="36"
+                                    ClipToBounds="True"
                                     SnapsToDevicePixels="True">
-                                <Grid>
+                                <Grid ClipToBounds="True">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" MinWidth="30" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Tab Header Content & Drag Thumb -->
-                                    <ContentPresenter x:Name="ContentSite"
-                                                      Grid.Column="0"
-                                                      Content="{TemplateBinding ContentControl.Content}"
-                                                      ContentStringFormat="{TemplateBinding ContentControl.ContentStringFormat}"
-                                                      ContentTemplate="{TemplateBinding ContentControl.ContentTemplate}"
-                                                      HorizontalAlignment="{TemplateBinding Control.HorizontalContentAlignment}"
-                                                      VerticalAlignment="{TemplateBinding Control.VerticalContentAlignment}"
-                                                      Margin="4,0,8,0" />
-
-                                    <Thumb x:Name="PART_Thumb" Grid.Column="0">
+                                    <!-- Tab Drag Thumb (Layer 1) -->
+                                    <Thumb x:Name="PART_Thumb" Grid.Column="0" Panel.ZIndex="1">
                                         <Thumb.Template>
                                             <ControlTemplate TargetType="Thumb">
                                                 <Border Background="Transparent" />
@@ -79,27 +114,56 @@
                                         </Thumb.Template>
                                     </Thumb>
 
-                                    <!-- Modern Tab Close Button -->
+                                    <!-- Tab Header Content (Layer 2) -->
+                                    <ContentPresenter x:Name="ContentSite"
+                                                      Grid.Column="0"
+                                                      Content="{TemplateBinding ContentControl.Content}"
+                                                      ContentStringFormat="{TemplateBinding ContentControl.ContentStringFormat}"
+                                                      HorizontalAlignment="{TemplateBinding Control.HorizontalContentAlignment}"
+                                                      VerticalAlignment="{TemplateBinding Control.VerticalContentAlignment}"
+                                                      Panel.ZIndex="2"
+                                                      IsHitTestVisible="False"
+                                                      Margin="8,0,4,0">
+                                        <ContentPresenter.ContentTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding}"
+                                                           VerticalAlignment="Center"
+                                                           FontSize="12"/>
+                                            </DataTemplate>
+                                        </ContentPresenter.ContentTemplate>
+                                    </ContentPresenter>
+
+                                    <!-- Modern Tab Close Button (Layer 10, Always on top & clickable) -->
                                     <Button x:Name="CloseButton"
                                             Grid.Column="1"
                                             Command="{x:Static dragablz:TabablzControl.CloseItemCommand}"
                                             CommandParameter="{Binding RelativeSource={RelativeSource TemplatedParent}}"
-                                            Width="18" Height="18"
+                                            Width="22" Height="22"
                                             Padding="0"
-                                            Margin="2,0,0,0"
+                                            Margin="2,0,6,0"
+                                            VerticalAlignment="Center"
                                             Background="Transparent"
                                             BorderThickness="0"
                                             Cursor="Hand"
+                                            Panel.ZIndex="10"
+                                            Focusable="False"
                                             ToolTip="关闭标签 (Ctrl+W)">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
-                                                <Border x:Name="CloseBorder" CornerRadius="3" Background="Transparent">
-                                                    <ui:SymbolIcon Symbol="Dismiss12" FontSize="9"
-                                                                   Foreground="{DynamicResource TextForeground}"/>
+                                                <Border x:Name="CloseBorder" CornerRadius="4" Background="Transparent" SnapsToDevicePixels="True">
+                                                    <ui:SymbolIcon Symbol="Dismiss16" FontSize="11"
+                                                                   Foreground="{DynamicResource TextForeground}"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
                                                         <Setter TargetName="CloseBorder" Property="Background" Value="#33E81123"/>
+                                                        <Setter Property="Foreground" Value="#E81123"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="CloseBorder" Property="Background" Value="#55E81123"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>

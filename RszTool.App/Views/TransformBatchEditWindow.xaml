@@ -62,23 +62,23 @@
                       Grid.Row="1" Grid.Column="2" Margin="0 8 8 0" />
             <TextBox Text="{Binding X.Value}" Grid.Row="1" Grid.Column="3" Margin="0 8 0 0" />
 
-            <TextBlock Text="Y" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0 8 0 0" />
-            <CheckBox IsChecked="{Binding Y.Enabled}" Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" Margin="0 8 0 0" />
-            <ComboBox ItemsSource="{Binding Source={StaticResource TransformBatchEditModes}}" SelectedItem="{Binding Y.Mode}"
-                      Grid.Row="2" Grid.Column="2" Margin="0 8 8 0" />
-            <TextBox Text="{Binding Y.Value}" Grid.Row="2" Grid.Column="3" Margin="0 8 0 0" />
-
-            <TextBlock Text="Z" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0 8 0 0" />
-            <CheckBox IsChecked="{Binding Z.Enabled}" Grid.Row="3" Grid.Column="1" VerticalAlignment="Center" Margin="0 8 0 0" />
+            <TextBlock Text="Z" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0 8 0 0" />
+            <CheckBox IsChecked="{Binding Z.Enabled}" Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" Margin="0 8 0 0" />
             <ComboBox ItemsSource="{Binding Source={StaticResource TransformBatchEditModes}}" SelectedItem="{Binding Z.Mode}"
-                      Grid.Row="3" Grid.Column="2" Margin="0 8 8 0" />
-            <TextBox Text="{Binding Z.Value}" Grid.Row="3" Grid.Column="3" Margin="0 8 0 0" />
+                      Grid.Row="2" Grid.Column="2" Margin="0 8 8 0" />
+            <TextBox Text="{Binding Z.Value}" Grid.Row="2" Grid.Column="3" Margin="0 8 0 0" />
 
-            <TextBlock Text="J" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0 8 0 0" />
-            <CheckBox IsChecked="{Binding J.Enabled}" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Margin="0 8 0 0" />
-            <ComboBox ItemsSource="{Binding Source={StaticResource TransformBatchEditModes}}" SelectedItem="{Binding J.Mode}"
+            <TextBlock Text="Y" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0 8 0 0" />
+            <CheckBox IsChecked="{Binding Y.Enabled}" Grid.Row="3" Grid.Column="1" VerticalAlignment="Center" Margin="0 8 0 0" />
+            <ComboBox ItemsSource="{Binding Source={StaticResource TransformBatchEditModes}}" SelectedItem="{Binding Y.Mode}"
+                      Grid.Row="3" Grid.Column="2" Margin="0 8 8 0" />
+            <TextBox Text="{Binding Y.Value}" Grid.Row="3" Grid.Column="3" Margin="0 8 0 0" />
+
+            <TextBlock Text="W" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0 8 0 0" />
+            <CheckBox IsChecked="{Binding W.Enabled}" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Margin="0 8 0 0" />
+            <ComboBox ItemsSource="{Binding Source={StaticResource TransformBatchEditModes}}" SelectedItem="{Binding W.Mode}"
                       Grid.Row="4" Grid.Column="2" Margin="0 8 8 0" />
-            <TextBox Text="{Binding J.Value}" Grid.Row="4" Grid.Column="3" Margin="0 8 0 0" />
+            <TextBox Text="{Binding W.Value}" Grid.Row="4" Grid.Column="3" Margin="0 8 0 0" />
         </Grid>
 
         <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right" Margin="0 12 0 0">
