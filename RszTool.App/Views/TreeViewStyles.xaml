@@ -32,32 +32,11 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Trigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard SpeedRatio="{DynamicResource AnimationSpeedRatio}">
-                                        <DoubleAnimation Storyboard.TargetName="ChevronRotate"
-                                                         Storyboard.TargetProperty="Angle"
-                                                         To="90" Duration="0:0:0.16">
-                                            <DoubleAnimation.EasingFunction>
-                                                <CubicEase EasingMode="EaseOut"/>
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.EnterActions>
-                            <Trigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard SpeedRatio="{DynamicResource AnimationSpeedRatio}">
-                                        <DoubleAnimation Storyboard.TargetName="ChevronRotate"
-                                                         Storyboard.TargetProperty="Angle"
-                                                         To="0" Duration="0:0:0.16">
-                                            <DoubleAnimation.EasingFunction>
-                                                <CubicEase EasingMode="EaseOut"/>
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.ExitActions>
+                            <Setter TargetName="ExpandPath" Property="RenderTransform">
+                                <Setter.Value>
+                                    <RotateTransform Angle="90"/>
+                                </Setter.Value>
+                            </Setter>
                             <Setter TargetName="ExpandPath" Property="Stroke" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -130,28 +109,6 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsExpanded" Value="false">
                             <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed"/>
-                        </Trigger>
-                        <Trigger Property="IsExpanded" Value="true">
-                            <Trigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard SpeedRatio="{DynamicResource AnimationSpeedRatio}">
-                                        <DoubleAnimation Storyboard.TargetName="ItemsHost"
-                                                         Storyboard.TargetProperty="Opacity"
-                                                         From="0.2" To="1.0" Duration="0:0:0.18">
-                                            <DoubleAnimation.EasingFunction>
-                                                <CubicEase EasingMode="EaseOut"/>
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                        <DoubleAnimation Storyboard.TargetName="ItemsHostTrans"
-                                                         Storyboard.TargetProperty="Y"
-                                                         From="-6" To="0" Duration="0:0:0.18">
-                                            <DoubleAnimation.EasingFunction>
-                                                <CubicEase EasingMode="EaseOut"/>
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.EnterActions>
                         </Trigger>
                         <Trigger Property="HasItems" Value="false">
                             <Setter TargetName="Expander" Property="Visibility" Value="Hidden"/>

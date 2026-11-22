@@ -109,17 +109,13 @@ namespace RszTool.App
                 public void ApplyDisplaySettings()
         {
             Resources["TreeItemRowHeight"] = SaveData.TreeItemHeight;
-            Resources["AnimationSpeedRatio"] = SaveData.AnimationSpeed <= 0 ? 100.0 : SaveData.AnimationSpeed;
         }
 
-protected override void OnStartup(StartupEventArgs e)
-
+        protected override void OnStartup(StartupEventArgs e)
         {
-
             base.OnStartup(e);
 
-
-
+            TreeViewAnimationHelper.Initialize();
             ThemeManager.Init(SaveData.CurTheme);
             ApplyDisplaySettings();
             SaveData.PropertyChanged += (s, args) =>

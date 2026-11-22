@@ -14,7 +14,6 @@
 
             <!-- Global Ergonomics & Animation Resources -->
             <sys:Double x:Key="TreeItemRowHeight">30</sys:Double>
-            <sys:Double x:Key="AnimationSpeedRatio">1.0</sys:Double>
 
             <!-- Modern Styles & Compatibility Resource Bridges -->
             <Style x:Key="ImageButton" TargetType="{x:Type Button}">
