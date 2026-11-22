@@ -63,6 +63,84 @@ namespace RszTool.App.ViewModels
             new FontSizeOption(18.0, "18 (特大)"),
         };
 
+        public static string[] RowHeightOptions { get; } = new[]
+        {
+            "20 (极紧凑)",
+            "24 (紧凑)",
+            "26 (较紧凑)",
+            "28 (紧凑标准)",
+            "30 (默认标准)",
+            "34 (宽松)",
+            "38 (舒适)",
+            "44 (较大)",
+            "50 (特大)",
+        };
+
+        public double TreeItemHeight
+        {
+            get => SaveData.TreeItemHeight;
+            set
+            {
+                var clamped = Math.Max(0.0, Math.Min(100.0, value));
+                if (Math.Abs(SaveData.TreeItemHeight - clamped) > 0.01)
+                {
+                    SaveData.TreeItemHeight = clamped;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TreeItemHeight)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TreeItemHeightText)));
+                    App.Instance.ApplyDisplaySettings();
+                    App.Instance.SaveSettings();
+                }
+            }
+        }
+
+        public string TreeItemHeightText
+        {
+            get
+            {
+                var prefix = $"{TreeItemHeight:0.#} ";
+                var opt = RowHeightOptions.FirstOrDefault(o => o.StartsWith(prefix));
+                return opt ?? $"{TreeItemHeight:0.#}";
+            }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value)) return;
+                string clean = value;
+                int paren = clean.IndexOf('(');
+                if (paren >= 0) clean = clean.Substring(0, paren).Trim();
+                if (double.TryParse(clean, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double parsed) ||
+                    double.TryParse(clean, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.CurrentCulture, out parsed))
+                {
+                    TreeItemHeight = parsed;
+                }
+            }
+        }
+
+        public double AnimationSpeed
+        {
+            get => SaveData.AnimationSpeed;
+            set
+            {
+                if (Math.Abs(SaveData.AnimationSpeed - value) > 0.01)
+                {
+                    SaveData.AnimationSpeed = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AnimationSpeed)));
+                    App.Instance.ApplyDisplaySettings();
+                    App.Instance.SaveSettings();
+                }
+            }
+        }
+
+        public record AnimationSpeedOption(double Speed, string Label);
+        public static AnimationSpeedOption[] AnimationSpeedOptions { get; } = new[]
+        {
+            new AnimationSpeedOption(0.0, "0x (关闭动画)"),
+            new AnimationSpeedOption(0.5, "0.5x (慢速)"),
+            new AnimationSpeedOption(1.0, "1.0x (标准)"),
+            new AnimationSpeedOption(1.5, "1.5x (快速)"),
+            new AnimationSpeedOption(2.0, "2.0x (极速)"),
+            new AnimationSpeedOption(3.0, "3.0x (飞速)"),
+        };
+
         public RelayCommand OpenCommand => new(OnOpen);
         public RelayCommand SaveCommand => new(OnSave);
         public RelayCommand SaveAsCommand => new(OnSaveAs);

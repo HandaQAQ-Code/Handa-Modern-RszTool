@@ -412,13 +412,13 @@
                                Margin="0,0,8,0" Padding="10,5" />
                 </StackPanel>
 
-                <!-- Right: Game Version & Theme Dropdowns -->
+                <!-- Right: Game Version, Font Size, Row Height, Animation Speed & Theme Dropdowns -->
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                     <ui:SymbolIcon Symbol="Games20" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                     <TextBlock Text="游戏:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                     <ComboBox ItemsSource="{x:Static rsztool:RszDefines.GameNames}"
                               SelectedValue="{Binding SaveData.GameName}"
-                              Width="110" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                              Width="100" Margin="0,0,10,0" VerticalAlignment="Center"/>
 
                     <ui:SymbolIcon Symbol="TextFont20" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                     <TextBlock Text="字号:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
@@ -426,13 +426,32 @@
                               SelectedValue="{Binding AppFontSize, Mode=TwoWay}"
                               SelectedValuePath="Size"
                               DisplayMemberPath="Label"
-                              Width="95" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                              Width="88" Margin="0,0,10,0" VerticalAlignment="Center"/>
+
+                    <ui:SymbolIcon Symbol="TextLineSpacing20" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <TextBlock Text="行高:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <ComboBox ItemsSource="{x:Static viewmodels:MainWindowModel.RowHeightOptions}"
+                              Text="{Binding TreeItemHeightText, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                              IsEditable="True"
+                              DropDownClosed="RowHeightComboBox_DropDownClosed"
+                              KeyDown="RowHeightComboBox_KeyDown"
+                              ToolTip="设置树形和字段统一行高 (可直接输入 0~100 任意数值)"
+                              Width="105" Margin="0,0,10,0" VerticalAlignment="Center"/>
+
+                    <ui:SymbolIcon Symbol="Flash20" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <TextBlock Text="动画:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <ComboBox ItemsSource="{x:Static viewmodels:MainWindowModel.AnimationSpeedOptions}"
+                              SelectedValue="{Binding AnimationSpeed, Mode=TwoWay}"
+                              SelectedValuePath="Speed"
+                              DisplayMemberPath="Label"
+                              ToolTip="展开/折叠与旋转动画速率调节"
+                              Width="105" Margin="0,0,10,0" VerticalAlignment="Center"/>
 
                     <ui:SymbolIcon Symbol="Color20" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                     <TextBlock Text="主题:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                     <ComboBox ItemsSource="{x:Static rsztool:RszDefines.Themes}"
                               SelectedValue="{Binding SaveData.CurTheme, Mode=TwoWay}"
-                              Width="105" VerticalAlignment="Center"/>
+                              Width="95" VerticalAlignment="Center"/>
                 </StackPanel>
             </DockPanel>
         </Border>

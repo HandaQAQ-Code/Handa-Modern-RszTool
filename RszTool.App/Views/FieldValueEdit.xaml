@@ -8,13 +8,13 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=viewmodels:IFieldValueViewModel}"
              d:DesignHeight="40" d:DesignWidth="800">
-    <Border Margin="0" Padding="4,0" MinHeight="30"
+    <Border Margin="0" Padding="4,0" MinHeight="{DynamicResource TreeItemRowHeight}"
             Background="Transparent"
             BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
             BorderThickness="0,0,0,1"
             VerticalAlignment="Center"
             SnapsToDevicePixels="True">
-        <Grid MinHeight="30">
+        <Grid MinHeight="{DynamicResource TreeItemRowHeight}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="220" MinWidth="150"/>
                 <ColumnDefinition Width="*" MinWidth="260"/>

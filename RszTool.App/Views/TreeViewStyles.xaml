@@ -34,7 +34,7 @@
                         <Trigger Property="IsChecked" Value="True">
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
-                                    <Storyboard>
+                                    <Storyboard SpeedRatio="{DynamicResource AnimationSpeedRatio}">
                                         <DoubleAnimation Storyboard.TargetName="ChevronRotate"
                                                          Storyboard.TargetProperty="Angle"
                                                          To="90" Duration="0:0:0.16">
@@ -47,7 +47,7 @@
                             </Trigger.EnterActions>
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
-                                    <Storyboard>
+                                    <Storyboard SpeedRatio="{DynamicResource AnimationSpeedRatio}">
                                         <DoubleAnimation Storyboard.TargetName="ChevronRotate"
                                                          Storyboard.TargetProperty="Angle"
                                                          To="0" Duration="0:0:0.16">
@@ -86,7 +86,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" MinHeight="30"/>
+                            <RowDefinition Height="Auto" MinHeight="{DynamicResource TreeItemRowHeight}"/>
                             <RowDefinition/>
                         </Grid.RowDefinitions>
 
@@ -104,7 +104,7 @@
                         <Border x:Name="Bd"
                                 Grid.Row="0"
                                 Grid.Column="1"
-                                MinHeight="30"
+                                MinHeight="{DynamicResource TreeItemRowHeight}"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="Transparent"
                                 BorderThickness="2,0,0,0"
@@ -134,7 +134,7 @@
                         <Trigger Property="IsExpanded" Value="true">
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
-                                    <Storyboard>
+                                    <Storyboard SpeedRatio="{DynamicResource AnimationSpeedRatio}">
                                         <DoubleAnimation Storyboard.TargetName="ItemsHost"
                                                          Storyboard.TargetProperty="Opacity"
                                                          From="0.2" To="1.0" Duration="0:0:0.18">
@@ -157,8 +157,8 @@
                             <Setter TargetName="Expander" Property="Visibility" Value="Hidden"/>
                         </Trigger>
                         
-                        <!-- Hover State -->
-                        <Trigger Property="IsMouseOver" Value="True">
+                        <!-- Hover State (ONLY highlight hovered item header, no ancestor propagation) -->
+                        <Trigger SourceName="Bd" Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}"/>
                         </Trigger>
 

@@ -81,5 +81,24 @@ namespace RszTool.App
                 }
             }
         }
+
+        private void RowHeightComboBox_DropDownClosed(object? sender, EventArgs e)
+        {
+            if (sender is ComboBox cb)
+            {
+                var be = cb.GetBindingExpression(ComboBox.TextProperty);
+                be?.UpdateSource();
+            }
+        }
+
+        private void RowHeightComboBox_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && sender is ComboBox cb)
+            {
+                var be = cb.GetBindingExpression(ComboBox.TextProperty);
+                be?.UpdateSource();
+                Keyboard.ClearFocus();
+            }
+        }
     }
 }
