@@ -109,8 +109,35 @@ namespace RszTool
 
         public static void GetFileExtension(string path, out string extension, out string version)
         {
-            version = Path.GetExtension(path);
-            extension = Path.GetExtension(path[0..^version.Length]);
+            string ext1 = Path.GetExtension(path);
+            if (string.IsNullOrEmpty(ext1))
+            {
+                extension = string.Empty;
+                version = string.Empty;
+                return;
+            }
+
+            // If the last extension is a known format without a version suffix (e.g. file.user or file.scn)
+            if (ext1 is ".user" or ".pfb" or ".scn" or ".mdf2" or ".uvar")
+            {
+                extension = ext1;
+                version = string.Empty;
+                return;
+            }
+
+            // If it has a version suffix (e.g. file.user.2 or file.scn.20)
+            string pathWithoutExt1 = path[0..^ext1.Length];
+            string ext2 = Path.GetExtension(pathWithoutExt1);
+            if (ext2 is ".user" or ".pfb" or ".scn" or ".mdf2" or ".uvar")
+            {
+                extension = ext2;
+                version = ext1;
+                return;
+            }
+
+            // Fallback for custom or unknown formats
+            version = ext1;
+            extension = ext2;
         }
 
         public static FileType GetFileType(string path)

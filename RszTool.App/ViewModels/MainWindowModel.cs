@@ -152,11 +152,17 @@ namespace RszTool.App.ViewModels
         public RelayCommand OpenRecentFile => new(OnOpenRecentFile);
         public RelayCommand OpenAbout => new(OnOpenAbout);
         public RelayCommand OpenSettings => new(_ => AppUtils.TryActionSimple(ShowSettings));
+        public RelayCommand OpenFileAssociationCommand => new(_ => AppUtils.TryActionSimple(ShowFileAssociation));
         public RelayCommand ToggleUvar => new(_ => AppUtils.TryActionSimple(OnToggleUvar));
 
         private void ShowSettings()
         {
             new UvarSettingsWindow { Owner = Application.Current.MainWindow }.ShowDialog();
+        }
+
+        private void ShowFileAssociation()
+        {
+            new FileAssociationWindow { Owner = Application.Current.MainWindow }.ShowDialog();
         }
 
         private void OnToggleUvar()

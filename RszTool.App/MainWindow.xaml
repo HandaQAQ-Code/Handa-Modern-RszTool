@@ -300,8 +300,21 @@
                                 <MenuItem.Icon><ui:SymbolIcon Symbol="Dismiss20" /></MenuItem.Icon>
                             </MenuItem>
                             <Separator />
+                            <MenuItem Header="文件格式关联与右键菜单..." Command="{Binding OpenFileAssociationCommand}">
+                                <MenuItem.Icon><ui:SymbolIcon Symbol="Attach20" /></MenuItem.Icon>
+                            </MenuItem>
+                            <Separator />
                             <MenuItem Header="{res:Text Quit}" Command="{Binding QuitCommand}" InputGestureText="Ctrl+Q">
                                 <MenuItem.Icon><ui:SymbolIcon Symbol="SignOut20" /></MenuItem.Icon>
+                            </MenuItem>
+                        </MenuItem>
+
+                        <MenuItem Header="工具" FontWeight="SemiBold" Padding="8,4">
+                            <MenuItem Header="文件格式关联与右键菜单设置..." Command="{Binding OpenFileAssociationCommand}">
+                                <MenuItem.Icon><ui:SymbolIcon Symbol="Attach20" /></MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="UVAR 文件配置..." Command="{Binding OpenSettings}">
+                                <MenuItem.Icon><ui:SymbolIcon Symbol="Settings20" /></MenuItem.Icon>
                             </MenuItem>
                         </MenuItem>
 
@@ -408,6 +421,14 @@
                     <ui:Button Icon="{ui:SymbolIcon Settings20}"
                                Content="UVAR 文件配置"
                                Command="{Binding OpenSettings}"
+                               Appearance="Secondary"
+                               Margin="0,0,6,0" Padding="10,5" />
+
+                    <!-- File Association Button -->
+                    <ui:Button Icon="{ui:SymbolIcon Attach20}"
+                               Content="扩展名关联"
+                               Command="{Binding OpenFileAssociationCommand}"
+                               ToolTip="绑定 .scn, .user, .pfb 等文件格式及资源管理器右键菜单"
                                Appearance="Secondary"
                                Margin="0,0,8,0" Padding="10,5" />
                 </StackPanel>
